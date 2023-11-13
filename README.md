@@ -37,7 +37,7 @@ int main() {
 
 ### Pool control
 
-Use `poolstl::par_pool` with your own [thread pool](https://github.com/alugowski/task-thread-pool) to have full control over thread count, thread startup, shut down, etc.:
+Use `poolstl::par_pool` with your own [thread pool](https://github.com/alugowski/task-thread-pool) to have full control over thread count, thread startup/shutdown, etc.:
 
 ```c++
 task_thread_pool::task_thread_pool pool;
@@ -46,6 +46,20 @@ std::for_each(poolstl::par_pool(pool), v.cbegin(), v.cbegin(), [](auto) {});
 ```
 
 The pool used by `poolstl::par` is managed internally by poolSTL. It is started on first use.
+
+## poolSTL as `std::execution::par` substitute
+**USE AT YOUR OWN RISK!**
+
+Two-line fix for missing compiler support. A no-op on compilers with support.
+
+If `POOLSTL_STD_SUPPLEMENT` is defined and native support is not found then poolSTL will alias its `poolstl::par` as `std::execution::par`:
+
+```c++
+#define POOLSTL_STD_SUPPLEMENT
+#include <poolstl/poolstl.hpp>
+```
+
+Now just use `std::execution::par` as normal. See [supplement_test.cpp](tests/supplement_test.cpp).
 
 ## Implemented algorithms
 Algorithms are added on an as-needed basis. If you need one that is not present feel free to open an issue or submit a PR.

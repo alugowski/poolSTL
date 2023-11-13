@@ -73,6 +73,8 @@ jobs:
           cmake --build build/ --config Debug
           cd build/tests
           ctest -C Debug --output-on-failure --verbose
+          echo "Supplement Test:"
+          ./supplement_test || ./Debug/supplement_test.exe
         shell: bash
 
       - name: Benchmark

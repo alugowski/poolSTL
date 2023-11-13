@@ -18,4 +18,38 @@
 #include "algorithm"
 #include "numeric"
 
+/*
+ * Optionally alias poolstl::par as std::execution::par to enable poolSTL to fill in for missing compiler support.
+ *
+ * USE AT YOUR OWN RISK!
+ *
+ * To do this define POOLSTL_STD_SUPPLEMENT before including poolstl.hpp.
+ *
+ * This aliasing will not happen if native support exists. If this autodetection fails for you:
+ *   - define POOLSTL_ALLOW_SUPPLEMENT=0 to disable
+ *   - define POOLSTL_FORCE_SUPPLEMENT to force enable (use with great care!)
+ */
+#ifndef POOLSTL_ALLOW_SUPPLEMENT
+#define POOLSTL_ALLOW_SUPPLEMENT 1
+#endif
+
+#if POOLSTL_ALLOW_SUPPLEMENT && defined(POOLSTL_STD_SUPPLEMENT)
+
+#if __cplusplus >= 201603L || (defined(_MSVC_LANG) && _MSVC_LANG >= 201603L)
+#if __has_include(<execution>)
+#include <execution>
+#endif
+#endif
+
+#if !defined(__cpp_lib_parallel_algorithm) || defined(POOLSTL_FORCE_SUPPLEMENT)
+namespace std {
+    namespace execution {
+        using ::poolstl::execution::parallel_policy;
+        using ::poolstl::execution::par;
+    }
+}
+
+#endif
+#endif
+
 #endif

@@ -45,3 +45,19 @@ catch_discover_tests(poolstl_test)
 add_executable(cpp11_test cpp11_test.cpp)
 target_link_libraries(cpp11_test PUBLIC poolSTL::poolSTL)
 target_compile_features(cpp11_test PUBLIC cxx_std_11)
+
+# Test std::execution supplementation
+# This uses only std::execution::par. On compilers with support this should result in a poolSTL no-op,
+# and on ones without support it should use fallback to poolstl::par.
+add_executable(supplement_test supplement_test.cpp)
+target_link_libraries(supplement_test PUBLIC poolSTL::poolSTL)
+target_compile_features(supplement_test PUBLIC cxx_std_17)
+if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    # GCC and Clang require TBB for std::execution::par
+    find_package(TBB)
+    if (TBB_FOUND)
+        target_link_libraries(supplement_test PUBLIC TBB::tbb)
+    else()
+        message("No TBB")
+    endif()
+endif()

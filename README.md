@@ -59,6 +59,10 @@ Note: All iterators must be random access.
 
 ## Installation
 
+### Single File
+
+You may download a single-file amalgamated `poolstl.hpp` from the [latest Release](https://github.com/alugowski/poolSTL/releases) and simply copy into your project.
+
 ### CMake
 
 ```cmake

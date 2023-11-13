@@ -22,6 +22,7 @@ jobs:
             description: "GCC 7"
             gcc-version: "7"
             cmake-version: "3.18"
+            test-amalgamation: true
 
           - os: ubuntu-latest
             description: "GCC 13"
@@ -81,6 +82,22 @@ jobs:
           cmake --build bench_build/ --config Release
           cd bench_build/benchmark/
           ./poolstl_bench || ./Release/poolstl_bench.exe
+        shell: bash
+
+      - name: Test Amalgamation
+        if: matrix.test-amalgamation
+        run: |
+          cd tools/
+          ./create_amalgamates.sh
+          cd ..
+          rm -rf include/poolstl/*
+          cp tools/poolstl.hpp include/poolstl/
+          mkdir -p include/poolstl/internal
+          cp tools/poolstl.hpp include/poolstl/internal/utils.hpp
+          cmake -S . -B build/ -DCMAKE_BUILD_TYPE=Debug -DPOOLSTL_TEST=ON -DPOOLSTL_TEST_COVERAGE=OFF
+          cmake --build build/ --config Debug
+          cd build/tests
+          ctest -C Debug --output-on-failure --verbose
         shell: bash
 
       - name: Upload Coverage to Codecov

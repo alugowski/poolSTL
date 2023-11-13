@@ -1,0 +1,68 @@
+// Copyright (C) 2023 Adam Lugowski. All rights reserved.
+// Use of this source code is governed by:
+// the BSD 2-clause license, the MIT license, or at your choosing the BSL-1.0 license found in the LICENSE.*.txt files.
+// SPDX-License-Identifier: BSD-2-Clause OR MIT OR BSL-1.0
+
+
+#ifndef POOLSTL_EXECUTION_HPP
+#define POOLSTL_EXECUTION_HPP
+
+#include <memory>
+
+#include "internal/utils.hpp"
+#include "internal/task_thread_pool.hpp"
+
+namespace poolstl {
+
+    namespace ttp = task_thread_pool;
+
+    namespace execution {
+        struct parallel_policy {
+            // For internal use only
+            static constexpr std::true_type use_default_pool() { return std::true_type{}; }
+        };
+
+        constexpr parallel_policy par{};
+
+        struct par_pool {
+            static constexpr std::false_type use_default_pool() { return std::false_type{}; }
+            explicit par_pool(ttp::task_thread_pool &pool) : pool(pool) {}
+            ttp::task_thread_pool &pool;
+        };
+    }
+
+    using execution::par;
+    using execution::par_pool;
+
+    namespace internal {
+        inline std::shared_ptr<ttp::task_thread_pool> get_default_pool() {
+            static std::shared_ptr<ttp::task_thread_pool> pool = std::make_shared<ttp::task_thread_pool>();
+            return pool;
+        }
+
+        template <typename ExecutionPolicy>
+        ttp::task_thread_pool& pool(ExecutionPolicy& policy) {
+            if constexpr (ExecutionPolicy::use_default_pool()) {
+                return *get_default_pool();
+            } else {
+                return policy.pool;
+            }
+        }
+
+        template <typename T> struct is_poolstl_execution_policy : std::false_type {};
+        template <> struct is_poolstl_execution_policy<::poolstl::execution::parallel_policy> : std::true_type {};
+        template <> struct is_poolstl_execution_policy<::poolstl::execution::par_pool> : std::true_type {};
+
+        template <class T>
+        inline constexpr bool is_poolstl_execution_policy_v = is_poolstl_execution_policy<T>::value;
+
+        template <class ExecutionPolicy, class Tp>
+        using enable_if_poolstl_execution_policy =
+            typename std::enable_if<
+                is_poolstl_execution_policy_v<
+                    typename std::remove_cv<typename std::remove_reference<ExecutionPolicy>::type>::type>,
+                Tp>::type;
+    }
+}
+
+#endif

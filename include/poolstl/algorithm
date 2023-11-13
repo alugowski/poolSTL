@@ -1,0 +1,44 @@
+// Copyright (C) 2023 Adam Lugowski. All rights reserved.
+// Use of this source code is governed by:
+// the BSD 2-clause license, the MIT license, or at your choosing the BSL-1.0 license found in the LICENSE.*.txt files.
+// SPDX-License-Identifier: BSD-2-Clause OR MIT OR BSL-1.0
+
+#ifndef POOLSTL_ALGORITHM_HPP
+#define POOLSTL_ALGORITHM_HPP
+
+#include <future>
+#include <vector>
+
+#include "internal/utils.hpp"
+#include "execution"
+
+namespace std {
+    /**
+     * See std::for_each https://en.cppreference.com/w/cpp/algorithm/for_each
+     */
+    template <class ExecutionPolicy, class InputIt, class UnaryFunction>
+    poolstl::internal::enable_if_poolstl_execution_policy<ExecutionPolicy, void>
+    for_each(ExecutionPolicy &&policy, InputIt first, InputIt last, UnaryFunction f) {
+        using namespace ::poolstl::internal;
+        ::std::vector<::std::future<void>> futures;
+        auto chunk_size = get_chunk_size(first, last, pool(policy).get_num_threads());
+
+        while (first < last) {
+            InputIt loop_end = ::std::min(first + chunk_size, last);
+
+            futures.emplace_back(pool(policy).submit([&](InputIt chunk_start, InputIt chunk_stop) {
+                for (; chunk_start != chunk_stop; ++chunk_start) {
+                    f(*chunk_start);
+                }
+            }, first, loop_end));
+
+            first = loop_end;
+        }
+
+        for (auto &future: futures) {
+            future.get();
+        }
+    }
+}
+
+#endif

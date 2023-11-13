@@ -1,0 +1,91 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    name: ${{matrix.os}} ${{ matrix.description }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-20.04
+            # oldest LLVM that the install-llvm-action action is able to install
+            description: "LLVM 5"
+            llvm-version: "5"
+
+          - os: ubuntu-20.04
+            # oldest GCC that the setup-gcc action is able to install
+            description: "GCC 7"
+            gcc-version: "7"
+            cmake-version: "3.18"
+
+          - os: ubuntu-latest
+            description: "GCC 13"
+            gcc-version: "13"
+
+          - os: ubuntu-latest
+            # default GCC, which has gcov
+
+          - os: macos-latest
+            # uses Apple Clang
+
+          - os: windows-latest
+            # uses MSVC
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install TBB (Ubuntu)
+        if: contains(matrix.os, 'ubuntu')
+        run: sudo apt-get install -y libtbb-dev
+
+      - name: Install TBB (macOS)
+        if: contains(matrix.os, 'macos')
+        run: brew install tbb
+
+      - name: Setup GCC
+        uses: egor-tensin/setup-gcc@v1
+        if: ${{ matrix.gcc-version != '' }}
+        with:
+          version: ${{ matrix.gcc-version }}
+
+      - name: Setup LLVM and Clang
+        uses: KyleMayes/install-llvm-action@v1
+        if: ${{ matrix.llvm-version != '' }}
+        with:
+          version: ${{ matrix.llvm-version }}
+          env: true
+
+      - name: Setup cmake
+        uses: jwlawson/actions-setup-cmake@v1
+        if: ${{ matrix.cmake-version != '' }}
+        with:
+          cmake-version: ${{ matrix.cmake-version }}
+
+      - name: Build and Test
+        run: |
+          cmake -S . -B build/ -DCMAKE_BUILD_TYPE=Debug -DPOOLSTL_TEST=ON -DPOOLSTL_TEST_COVERAGE=ON
+          cmake --build build/ --config Debug
+          cd build/tests
+          ctest -C Debug --output-on-failure --verbose
+        shell: bash
+
+      - name: Benchmark
+        if: ${{ matrix.gcc-version != '7' }}
+        run: |
+          cmake -S . -B bench_build/ -DCMAKE_BUILD_TYPE=Release -DPOOLSTL_BENCH=ON
+          cmake --build bench_build/ --config Release
+          cd bench_build/benchmark/
+          ./poolstl_bench || ./Release/poolstl_bench.exe
+        shell: bash
+
+      - name: Upload Coverage to Codecov
+        if: contains(matrix.os, 'ubuntu')
+        uses: codecov/codecov-action@v3
+        with:
+          gcov: true
+          gcov_include: include/*

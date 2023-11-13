@@ -12,16 +12,24 @@
 #define POOLSTL_VERSION_PATCH 0
 
 #include <cstddef>
+#include <iterator>
 
-namespace poolstl::internal {
+namespace poolstl {
+    namespace internal {
 
-    template<typename Iterator>
-    std::size_t get_chunk_size(Iterator first, Iterator last, unsigned int num_threads) {
-        std::size_t num_steps = (last - first);
-        auto remainder = num_steps % num_threads;
-        return (num_steps / num_threads) + (remainder > 0 ? 1 : 0);
+        inline std::size_t get_chunk_size(std::size_t num_steps, unsigned int num_threads) {
+            auto remainder = num_steps % num_threads;
+            return (num_steps / num_threads) + (remainder > 0 ? 1 : 0);
+        }
+
+        template<typename Iterator>
+        typename std::iterator_traits<Iterator>::difference_type
+        get_chunk_size(Iterator first, Iterator last, unsigned int num_threads) {
+            using diff_t = typename std::iterator_traits<Iterator>::difference_type;
+            std::size_t num_steps = std::distance(first, last);
+            return static_cast<diff_t>(get_chunk_size(num_steps, num_threads));
+        }
     }
-
 }
 
 #endif

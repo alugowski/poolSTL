@@ -1,6 +1,9 @@
+[![tests](https://github.com/alugowski/poolSTL/actions/workflows/tests.yml/badge.svg)](https://github.com/alugowski/poolSTL/actions/workflows/tests.yml)
+[![codecov](https://codecov.io/gh/alugowski/poolSTL/branch/main/graph/badge.svg?token=zB7yN8NwUc)](https://codecov.io/gh/alugowski/poolSTL)
+
 # poolSTL
 
-Thread pool-based implementation of [parallel standard library algorithms](https://en.cppreference.com/w/cpp/algorithm#Execution_policies).
+Thread pool-based implementation of [parallel standard library algorithms](https://en.cppreference.com/w/cpp/algorithm).
 
 Those algorithms are great, but compiler support is inconsistent.
 PoolSTL is a *supplement* to fill in the support gaps so we can use parallel algorithms now.

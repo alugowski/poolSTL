@@ -13,7 +13,6 @@
 #include "utils.hpp"
 
 namespace ttp = task_thread_pool;
-using it = i_iter<int>;
 
 TEST_CASE("for_each", "[alg]") {
     std::atomic<int> sum{0};
@@ -40,8 +39,9 @@ TEST_CASE("for_each", "[alg]") {
 TEST_CASE("default_pool", "[execution]") {
     std::atomic<int> sum{0};
     for (auto num_iters : test_arr_sizes) {
+        auto v = iota_vector(num_iters);
         sum = 0;
-        std::for_each(poolstl::par, it(0), it(num_iters), [&](auto) { ++sum; });
+        std::for_each(poolstl::par, v.cbegin(), v.cend(), [&](auto) { ++sum; });
         REQUIRE(sum == num_iters);
     }
 }

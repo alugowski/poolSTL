@@ -8,7 +8,9 @@
 #define POOLSTL_BENCH_UTILS_HPP
 
 #include <algorithm>
+#ifdef POOLSTL_BENCH_STD_PAR
 #include <execution>
+#endif
 #include <numeric>
 #include <utility>
 #include <vector>
@@ -40,11 +42,13 @@ template <> struct policy<poolstl::execution::par_pool> {
         return poolstl::execution::par_pool(pool);
     };
 };
+#ifdef POOLSTL_BENCH_STD_PAR
 template <> struct policy<std_par> {
     constexpr static const std::execution::parallel_policy& get() {
         return std::execution::par;
     };
 };
+#endif
 
 template <typename T=int>
 std::vector<T> iota_vector(size_t size, T init=0) {
@@ -52,5 +56,7 @@ std::vector<T> iota_vector(size_t size, T init=0) {
     std::iota(ret.begin(), ret.end(), init);
     return ret;
 }
+
+void slow();
 
 #endif

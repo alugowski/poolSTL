@@ -45,9 +45,9 @@ void for_each(benchmark::State& state) {
 
     for ([[maybe_unused]] auto _ : state) {
         if constexpr (is_policy<ExecutionPolicy>::value) {
-            std::for_each(policy<ExecutionPolicy>::get(), values.begin(), values.end(), [&](auto v) {dest[v] = v;});
+            std::for_each(policy<ExecutionPolicy>::get(), values.begin(), values.end(), [&](auto v) { slow(); dest[v] = v; });
         } else {
-            std::for_each(values.begin(), values.end(), [&](auto v) {dest[v] = v;});
+            std::for_each(values.begin(), values.end(), [&](auto v) {slow(); dest[v] = v;});
         }
         benchmark::DoNotOptimize(dest);
         benchmark::ClobberMemory();
@@ -69,9 +69,9 @@ void transform(benchmark::State& state) {
 
     for ([[maybe_unused]] auto _ : state) {
         if constexpr (is_policy<ExecutionPolicy>::value) {
-            std::transform(policy<ExecutionPolicy>::get(), values.begin(), values.end(), dest.begin(), [&](auto v) { return v; });
+            std::transform(policy<ExecutionPolicy>::get(), values.begin(), values.end(), dest.begin(), [&](auto v) { slow(); return v; });
         } else {
-            std::transform(values.begin(), values.end(), dest.begin(), [&](auto v) { return v; });
+            std::transform(values.begin(), values.end(), dest.begin(), [&](auto v) { slow(); return v; });
         }
         benchmark::DoNotOptimize(dest);
         benchmark::ClobberMemory();

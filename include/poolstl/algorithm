@@ -24,11 +24,11 @@ namespace std {
         auto chunk_size = get_chunk_size(first, last, pool(policy).get_num_threads());
 
         while (first < last) {
-            InputIt loop_end = ::std::min(first + chunk_size, last);
+            InputIt loop_end = first + ::std::min(chunk_size, std::distance(first, last));
 
-            futures.emplace_back(pool(policy).submit([&](InputIt chunk_start, InputIt chunk_stop) {
-                for (; chunk_start != chunk_stop; ++chunk_start) {
-                    f(*chunk_start);
+            futures.emplace_back(pool(policy).submit([&f](InputIt chunk_first, InputIt chunk_last) {
+                for (; chunk_first != chunk_last; ++chunk_first) {
+                    f(*chunk_first);
                 }
             }, first, loop_end));
 

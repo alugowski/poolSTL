@@ -14,4 +14,14 @@ bool static_init() {
 }
 static bool initialized = static_init();
 
+void slow() {
+    int sum = 0;
+
+    for (int i = 0; i < 10; ++i) {
+        sum += i*31 + sum;
+    }
+
+    benchmark::DoNotOptimize(sum);
+}
+
 BENCHMARK_MAIN();

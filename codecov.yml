@@ -15,3 +15,4 @@ parsers:
 ignore:
   - "tests"
   - "benchmark"
+  - "include/poolstl/internal/task_thread_pool.hpp"

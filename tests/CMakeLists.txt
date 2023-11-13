@@ -22,7 +22,7 @@ Include(FetchContent)
 FetchContent_Declare(
         Catch2
         GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-        GIT_TAG        v3.3.2
+        GIT_TAG        v3.4.0
         GIT_SHALLOW TRUE
         EXCLUDE_FROM_ALL
 )
@@ -35,4 +35,13 @@ include(Catch)
 
 add_executable(poolstl_test poolstl_test.cpp)
 target_link_libraries(poolstl_test PRIVATE Catch2::Catch2WithMain poolSTL::poolSTL)
+target_compile_definitions(poolstl_test PRIVATE CATCH_CONFIG_FAST_COMPILE)
+# Catch2 requires C++14
+target_compile_features(poolstl_test PUBLIC cxx_std_14)
+
 catch_discover_tests(poolstl_test)
+
+# Dedicated target to ensure C++11 builds work
+add_executable(cpp11_test cpp11_test.cpp)
+target_link_libraries(cpp11_test PUBLIC poolSTL::poolSTL)
+target_compile_features(cpp11_test PUBLIC cxx_std_11)

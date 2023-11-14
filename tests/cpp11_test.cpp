@@ -12,9 +12,9 @@
 #include <poolstl/poolstl.hpp>
 
 int main() {
-    std::vector<int> v = {0, 1, 2, 3, 4, 5};
+    std::vector<int> v = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
     std::for_each(poolstl::par, v.cbegin(), v.cend(), [](int x) {
-        std::cout << x << " ";
+        std::cout << x;
     });
     std::cout << std::endl;
     return 0;

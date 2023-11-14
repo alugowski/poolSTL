@@ -25,11 +25,12 @@ target_include_directories(
         $<INSTALL_INTERFACE:include>)
 
 set(HEADER_FILES
-        include/poolstl/poolSTL.hpp
+        include/poolstl/poolstl.hpp
         include/poolstl/algorithm
         include/poolstl/execution
         include/poolstl/numeric
         include/poolstl/internal/utils.hpp
+        include/poolstl/internal/ttp_impl.hpp
         include/poolstl/internal/task_thread_pool.hpp)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${HEADER_FILES}")

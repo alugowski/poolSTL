@@ -16,6 +16,7 @@ Use this if:
 * you cannot link against TBB for whatever reason
 * the [Parallel STL](https://www.intel.com/content/www/us/en/developer/articles/guide/get-started-with-parallel-stl.html) is too heavy
 
+CI tests on GCC 7+, Clang/LLVM 5+, Apple Clang, MSVC
 ## Usage
 
 PoolSTL defines `poolstl::par` and `poolstl::par_pool` execution policies.
@@ -69,6 +70,7 @@ Algorithms are added on an as-needed basis. If you need one that is not present 
 * [std::for_each_n](https://en.cppreference.com/w/cpp/algorithm/for_each_n)
 
 ### `<numeric>`
+* [std::reduce](https://en.cppreference.com/w/cpp/algorithm/reduce)
 
 Note: All iterators must be random access.
 

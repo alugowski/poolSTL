@@ -14,12 +14,6 @@
 
 namespace ttp = task_thread_pool;
 
-#if __cplusplus >= 201703L || (defined(_MSVC_LANG) && _MSVC_LANG >= 201703L)
-#define HAVE_CXX17 1
-#else
-#define HAVE_CXX17 0
-#endif
-
 TEST_CASE("for_each", "[alg]") {
     std::atomic<int> sum{0};
     for (auto num_threads : test_thread_counts) {
@@ -55,6 +49,24 @@ TEST_CASE("for_each_n", "[alg]") {
             // sequential for_each_n has incomplete GCC7 support
             std::for_each_n(poolstl::par_pool(pool), v.cbegin(), num_iters, f);
             REQUIRE(sum == num_iters);
+        }
+    }
+}
+
+TEST_CASE("reduce", "[alg][numeric]") {
+    for (auto num_threads : test_thread_counts) {
+        ttp::task_thread_pool pool(num_threads);
+
+        for (auto num_iters : test_arr_sizes) {
+            auto v = iota_vector(num_iters);
+
+#if POOLSTL_HAVE_CXX17_LIB
+            auto seq = std::reduce(v.cbegin(), v.cend());
+#else
+            auto seq = poolstl::internal::cpp17::reduce(v.cbegin(), v.cend());
+#endif
+            auto par = std::reduce(poolstl::par_pool(pool), v.cbegin(), v.cend());
+            REQUIRE(seq == par);
         }
     }
 }

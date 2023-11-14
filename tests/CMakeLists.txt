@@ -37,7 +37,7 @@ add_executable(poolstl_test poolstl_test.cpp)
 target_link_libraries(poolstl_test PRIVATE Catch2::Catch2WithMain poolSTL::poolSTL)
 target_compile_definitions(poolstl_test PRIVATE CATCH_CONFIG_FAST_COMPILE)
 # Catch2 requires C++14, some implemented methods were only added in C++17
-target_compile_features(poolstl_test PUBLIC cxx_std_17)
+target_compile_features(poolstl_test PUBLIC cxx_std_14)
 
 catch_discover_tests(poolstl_test)
 

@@ -33,7 +33,7 @@ void reduce(benchmark::State& state) {
 }
 
 BENCHMARK(reduce<seq>)->UseRealTime();
-//BENCHMARK(reduce<poolstl::par>)->UseRealTime();
+BENCHMARK(reduce<poolstl_par>)->UseRealTime();
 #ifdef POOLSTL_BENCH_STD_PAR
 BENCHMARK(reduce<std_par>)->UseRealTime();
 #endif

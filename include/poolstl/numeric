@@ -7,10 +7,45 @@
 #ifndef POOLSTL_NUMERIC_HPP
 #define POOLSTL_NUMERIC_HPP
 
+#include <functional>
+
 #include "execution"
 #include "internal/ttp_impl.hpp"
 
 namespace std {
+
+    /**
+     * NOTE: Iterators are expected to be random access.
+     * See std::for_each https://en.cppreference.com/w/cpp/algorithm/reduce
+     */
+    template <class ExecPolicy, class RandIt, class T, class BinaryOp>
+    poolstl::internal::enable_if_poolstl_execution_policy<ExecPolicy, T>
+    reduce(ExecPolicy &&policy, RandIt first, RandIt last, T init, BinaryOp binop) {
+        return poolstl::internal::parallel_reduce(std::forward<ExecPolicy>(policy), first, last, init, binop);
+    }
+
+    /**
+     * NOTE: Iterators are expected to be random access.
+     * See std::for_each https://en.cppreference.com/w/cpp/algorithm/reduce
+     */
+    template <class ExecPolicy, class RandIt, class T>
+    poolstl::internal::enable_if_poolstl_execution_policy<ExecPolicy, T>
+    reduce(ExecPolicy &&policy, RandIt first, RandIt last, T init) {
+        return std::reduce(std::forward<ExecPolicy>(policy), first, last, init, std::plus<T>());
+    }
+
+    /**
+     * NOTE: Iterators are expected to be random access.
+     * See std::for_each https://en.cppreference.com/w/cpp/algorithm/reduce
+     */
+    template <class ExecPolicy, class RandIt>
+    poolstl::internal::enable_if_poolstl_execution_policy<
+        ExecPolicy, typename std::iterator_traits<RandIt>::value_type>
+    reduce(ExecPolicy &&policy, RandIt first, RandIt last) {
+        return std::reduce(std::forward<ExecPolicy>(policy), first, last,
+                           typename std::iterator_traits<RandIt>::value_type{});
+    }
+
 }
 
 #endif

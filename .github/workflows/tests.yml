@@ -18,15 +18,19 @@ jobs:
             llvm-version: "5"
 
           - os: ubuntu-20.04
-            # oldest GCC that the setup-gcc action is able to install
             description: "GCC 7"
             gcc-version: "7"
             cmake-version: "3.18"
             test-amalgamation: true
 
+          - os: ubuntu-20.04
+            description: "GCC 9"
+            gcc-version: "9"
+
           - os: ubuntu-latest
             description: "GCC 13"
             gcc-version: "13"
+            test-amalgamation: true
 
           - os: ubuntu-latest
             # default GCC, which has gcov
@@ -78,7 +82,8 @@ jobs:
         shell: bash
 
       - name: Benchmark
-        if: ${{ matrix.gcc-version != '7' }}
+        # Earliest GCC with all benchmarked methods is 9
+        if: matrix.gcc-version != '7' && matrix.gcc-version != '8'
         run: |
           cmake -S . -B bench_build/ -DCMAKE_BUILD_TYPE=Release -DPOOLSTL_BENCH=ON
           cmake --build bench_build/ --config Release

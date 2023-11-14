@@ -12,8 +12,6 @@
 #ifndef POOLSTL_HPP
 #define POOLSTL_HPP
 
-#include "internal/utils.hpp"
-#include "internal/task_thread_pool.hpp"
 #include "execution"
 #include "algorithm"
 #include "numeric"

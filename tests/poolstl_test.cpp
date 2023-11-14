@@ -14,6 +14,12 @@
 
 namespace ttp = task_thread_pool;
 
+#if __cplusplus >= 201703L || (defined(_MSVC_LANG) && _MSVC_LANG >= 201703L)
+#define HAVE_CXX17 1
+#else
+#define HAVE_CXX17 0
+#endif
+
 TEST_CASE("for_each", "[alg]") {
     std::atomic<int> sum{0};
     for (auto num_threads : test_thread_counts) {
@@ -31,6 +37,32 @@ TEST_CASE("for_each", "[alg]") {
                     std::for_each(poolstl::par_pool(pool), v.cbegin(), v.cend(), f);
                 }
                 REQUIRE(sum == num_iters);
+            }
+        }
+    }
+}
+
+TEST_CASE("for_each_n", "[alg]") {
+    std::atomic<int> sum{0};
+    for (auto num_threads : test_thread_counts) {
+        ttp::task_thread_pool pool(num_threads);
+
+        auto v = iota_vector(*std::max_element(test_arr_sizes.cbegin(), test_arr_sizes.cend()));
+
+        for (auto num_iters : test_arr_sizes) {
+            for (auto is_sequential : {true, false}) {
+                sum = 0;
+                auto f = [&](auto) { ++sum; };
+                if (is_sequential) {
+#if HAVE_CXX17
+                    std::for_each_n(v.cbegin(), num_iters, f);
+#endif
+                } else {
+                    std::for_each_n(poolstl::par_pool(pool), v.cbegin(), num_iters, f);
+                }
+#if HAVE_CXX17
+                REQUIRE(sum == num_iters);
+#endif
             }
         }
     }

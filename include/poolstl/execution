@@ -8,8 +8,8 @@
 #define POOLSTL_EXECUTION_HPP
 
 #include <memory>
+#include <type_traits>
 
-#include "internal/utils.hpp"
 #include "internal/task_thread_pool.hpp"
 
 namespace poolstl {

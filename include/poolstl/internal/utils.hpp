@@ -17,17 +17,25 @@
 namespace poolstl {
     namespace internal {
 
-        inline std::size_t get_chunk_size(std::size_t num_steps, unsigned int num_threads) {
+        inline constexpr std::size_t get_chunk_size(std::size_t num_steps, unsigned int num_threads) {
             auto remainder = num_steps % num_threads;
             return (num_steps / num_threads) + (remainder > 0 ? 1 : 0);
         }
 
         template<typename Iterator>
-        typename std::iterator_traits<Iterator>::difference_type
+        constexpr typename std::iterator_traits<Iterator>::difference_type
         get_chunk_size(Iterator first, Iterator last, unsigned int num_threads) {
             using diff_t = typename std::iterator_traits<Iterator>::difference_type;
             std::size_t num_steps = std::distance(first, last);
             return static_cast<diff_t>(get_chunk_size(num_steps, num_threads));
+        }
+
+        template<typename Iterator>
+        constexpr Iterator chunk_advance(const Iterator& iter, const Iterator& last,
+                               typename std::iterator_traits<Iterator>::difference_type chunk_size) {
+            Iterator chunk_end = iter;
+            std::advance(chunk_end, ::std::min(chunk_size, std::distance(iter, last)));
+            return chunk_end;
         }
     }
 }

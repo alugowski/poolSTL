@@ -50,20 +50,11 @@ TEST_CASE("for_each_n", "[alg]") {
         auto v = iota_vector(*std::max_element(test_arr_sizes.cbegin(), test_arr_sizes.cend()));
 
         for (auto num_iters : test_arr_sizes) {
-            for (auto is_sequential : {true, false}) {
-                sum = 0;
-                auto f = [&](auto) { ++sum; };
-                if (is_sequential) {
-#if HAVE_CXX17
-                    std::for_each_n(v.cbegin(), num_iters, f);
-#endif
-                } else {
-                    std::for_each_n(poolstl::par_pool(pool), v.cbegin(), num_iters, f);
-                }
-#if HAVE_CXX17
-                REQUIRE(sum == num_iters);
-#endif
-            }
+            sum = 0;
+            auto f = [&](auto) { ++sum; };
+            // sequential for_each_n has incomplete GCC7 support
+            std::for_each_n(poolstl::par_pool(pool), v.cbegin(), num_iters, f);
+            REQUIRE(sum == num_iters);
         }
     }
 }

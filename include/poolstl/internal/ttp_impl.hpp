@@ -14,15 +14,15 @@
 namespace poolstl {
     namespace internal {
 
-        template <class ExecutionPolicy, class InputIt, class UnaryFunction>
-        void parallel_for(ExecutionPolicy &&policy, InputIt first, InputIt last, UnaryFunction f) {
+        template <class ExecPolicy, class RandIt, class UnaryFunction>
+        void parallel_for(ExecPolicy &&policy, RandIt first, RandIt last, UnaryFunction f) {
             ::std::vector<::std::future<void>> futures;
             auto chunk_size = get_chunk_size(first, last, pool(policy).get_num_threads());
 
             while (first < last) {
-                InputIt loop_end = chunk_advance(first, last, chunk_size);
+                RandIt loop_end = chunk_advance(first, last, chunk_size);
 
-                futures.emplace_back(pool(policy).submit([&f](InputIt chunk_first, InputIt chunk_last) {
+                futures.emplace_back(pool(policy).submit([&f](RandIt chunk_first, RandIt chunk_last) {
                     for (; chunk_first != chunk_last; ++chunk_first) {
                         f(*chunk_first);
                     }

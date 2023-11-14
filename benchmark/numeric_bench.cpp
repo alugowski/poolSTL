@@ -16,14 +16,14 @@
 
 ////////////////////////////////
 
-template <class ExecutionPolicy>
+template <class ExecPolicy>
 void reduce(benchmark::State& state) {
     auto values = iota_vector(arr_length);
 
     for ([[maybe_unused]] auto _ : state) {
         int64_t sum = 0;
-        if constexpr (is_policy<ExecutionPolicy>::value) {
-            sum = std::reduce(policy<ExecutionPolicy>::get(), values.begin(), values.end());
+        if constexpr (is_policy<ExecPolicy>::value) {
+            sum = std::reduce(policy<ExecPolicy>::get(), values.begin(), values.end());
         } else {
             sum = std::reduce(values.begin(), values.end());
         }

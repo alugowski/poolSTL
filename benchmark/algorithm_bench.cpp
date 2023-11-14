@@ -14,14 +14,14 @@
 
 ////////////////////////////////
 
-template <class ExecutionPolicy>
+template <class ExecPolicy>
 void all_of(benchmark::State& state) {
     auto values = iota_vector(arr_length);
 
     for ([[maybe_unused]] auto _ : state) {
         bool res;
-        if constexpr (is_policy<ExecutionPolicy>::value) {
-            res = std::all_of(policy<ExecutionPolicy>::get(), values.begin(), values.end(), [&](auto v) { return v >= 0; });
+        if constexpr (is_policy<ExecPolicy>::value) {
+            res = std::all_of(policy<ExecPolicy>::get(), values.begin(), values.end(), [&](auto v) { return v >= 0; });
         } else {
             res = std::all_of(values.begin(), values.end(), [&](auto v) { return v >= 0; });
         }
@@ -38,14 +38,14 @@ BENCHMARK(all_of<std_par>)->UseRealTime();
 
 ////////////////////////////////
 
-template <class ExecutionPolicy>
+template <class ExecPolicy>
 void for_each(benchmark::State& state) {
     auto values = iota_vector<int>(arr_length);
     std::vector<int> dest(arr_length);
 
     for ([[maybe_unused]] auto _ : state) {
-        if constexpr (is_policy<ExecutionPolicy>::value) {
-            std::for_each(policy<ExecutionPolicy>::get(), values.begin(), values.end(), [&](auto v) { slow(); dest[v] = v; });
+        if constexpr (is_policy<ExecPolicy>::value) {
+            std::for_each(policy<ExecPolicy>::get(), values.begin(), values.end(), [&](auto v) { slow(); dest[v] = v; });
         } else {
             std::for_each(values.begin(), values.end(), [&](auto v) {slow(); dest[v] = v;});
         }
@@ -62,14 +62,14 @@ BENCHMARK(for_each<std_par>)->UseRealTime();
 
 ////////////////////////////////
 
-template <class ExecutionPolicy>
+template <class ExecPolicy>
 void transform(benchmark::State& state) {
     auto values = iota_vector<int>(arr_length);
     std::vector<int> dest(arr_length);
 
     for ([[maybe_unused]] auto _ : state) {
-        if constexpr (is_policy<ExecutionPolicy>::value) {
-            std::transform(policy<ExecutionPolicy>::get(), values.begin(), values.end(), dest.begin(), [&](auto v) { slow(); return v; });
+        if constexpr (is_policy<ExecPolicy>::value) {
+            std::transform(policy<ExecPolicy>::get(), values.begin(), values.end(), dest.begin(), [&](auto v) { slow(); return v; });
         } else {
             std::transform(values.begin(), values.end(), dest.begin(), [&](auto v) { slow(); return v; });
         }

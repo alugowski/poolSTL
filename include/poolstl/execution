@@ -40,8 +40,8 @@ namespace poolstl {
             return pool;
         }
 
-        template <typename ExecutionPolicy>
-        ttp::task_thread_pool& pool(ExecutionPolicy&) {
+        template <typename ExecPolicy>
+        ttp::task_thread_pool& pool(ExecPolicy&) {
             return *get_default_pool();
         }
 
@@ -54,11 +54,11 @@ namespace poolstl {
         template <> struct is_poolstl_execution_policy<::poolstl::execution::parallel_policy> : std::true_type {};
         template <> struct is_poolstl_execution_policy<::poolstl::execution::par_pool> : std::true_type {};
 
-        template <class ExecutionPolicy, class Tp>
+        template <class ExecPolicy, class Tp>
         using enable_if_poolstl_execution_policy =
             typename std::enable_if<
                 is_poolstl_execution_policy<
-                    typename std::remove_cv<typename std::remove_reference<ExecutionPolicy>::type>::type>::value,
+                    typename std::remove_cv<typename std::remove_reference<ExecPolicy>::type>::type>::value,
                 Tp>::type;
     }
 }

@@ -15,22 +15,22 @@ namespace std {
      * NOTE: Iterators are expected to be random access.
      * See std::for_each https://en.cppreference.com/w/cpp/algorithm/for_each
      */
-    template <class ExecutionPolicy, class InputIt, class UnaryFunction>
-    poolstl::internal::enable_if_poolstl_execution_policy<ExecutionPolicy, void>
-    for_each(ExecutionPolicy &&policy, InputIt first, InputIt last, UnaryFunction f) {
-        poolstl::internal::parallel_for(std::forward<ExecutionPolicy>(policy), first, last, f);
+    template <class ExecPolicy, class RandIt, class UnaryFunction>
+    poolstl::internal::enable_if_poolstl_execution_policy<ExecPolicy, void>
+    for_each(ExecPolicy &&policy, RandIt first, RandIt last, UnaryFunction f) {
+        poolstl::internal::parallel_for(std::forward<ExecPolicy>(policy), first, last, f);
     }
 
     /**
      * NOTE: Iterators are expected to be random access.
      * See std::for_each_n https://en.cppreference.com/w/cpp/algorithm/for_each_n
      */
-    template <class ExecutionPolicy, class InputIt, class Size, class UnaryFunction>
-    poolstl::internal::enable_if_poolstl_execution_policy<ExecutionPolicy, InputIt>
-    for_each_n(ExecutionPolicy &&policy, InputIt first, Size n, UnaryFunction f) {
-        InputIt last = first;
+    template <class ExecPolicy, class RandIt, class Size, class UnaryFunction>
+    poolstl::internal::enable_if_poolstl_execution_policy<ExecPolicy, RandIt>
+    for_each_n(ExecPolicy &&policy, RandIt first, Size n, UnaryFunction f) {
+        RandIt last = first;
         std::advance(last, n);
-        poolstl::internal::parallel_for(std::forward<ExecutionPolicy>(policy), first, last, f);
+        poolstl::internal::parallel_for(std::forward<ExecPolicy>(policy), first, last, f);
         return last;
     }
 

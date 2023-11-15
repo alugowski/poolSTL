@@ -5,6 +5,7 @@
 
 
 #include <algorithm>
+#include <iostream>
 
 #include <catch2/catch_test_macros.hpp>
 
@@ -65,6 +66,36 @@ TEST_CASE("fill_n", "[alg][algorithm]") {
     }
 }
 #endif
+
+TEST_CASE("find", "[alg][algorithm]") {
+    for (auto num_threads : test_thread_counts) {
+        ttp::task_thread_pool pool(num_threads);
+
+        for (auto vec_size : test_arr_sizes) {
+            auto haystack = iota_vector(vec_size);
+
+            for (int needle : {int(vec_size * 0.1),
+                               int(vec_size * 0.1),
+                               int(vec_size * 0.99),
+                               vec_size,
+                               vec_size + 100}) {
+                {
+                    // calls find_if
+                    auto seq = std::find(haystack.cbegin(), haystack.cend(), needle);
+                    auto par = std::find(poolstl::par_pool(pool), haystack.cbegin(), haystack.cend(), needle);
+                    REQUIRE(seq == par);
+                }
+                {
+                    auto pred = [&](auto x) { return x < needle; };
+                    // calls find_if
+                    auto seq = std::find_if_not(haystack.cbegin(), haystack.cend(), pred);
+                    auto par = std::find_if_not(poolstl::par_pool(pool), haystack.cbegin(), haystack.cend(), pred);
+                    REQUIRE(seq == par);
+                }
+            }
+        }
+    }
+}
 
 TEST_CASE("for_each", "[alg][algorithm]") {
     std::atomic<int> sum{0};

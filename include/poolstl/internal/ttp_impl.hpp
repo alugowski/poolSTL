@@ -20,11 +20,11 @@ namespace poolstl {
          */
         template <class ExecPolicy, class RandIt, class Chunk>
         std::vector<std::future<decltype(std::declval<Chunk>()(std::declval<RandIt>(), std::declval<RandIt>()))>>
-        parallel_chunk_for(ExecPolicy &&policy, RandIt first, RandIt last, Chunk chunk) {
+        parallel_chunk_for(ExecPolicy &&policy, RandIt first, RandIt last, Chunk chunk, int extra_split_factor = 1) {
             std::vector<std::future<
                 decltype(std::declval<Chunk>()(std::declval<RandIt>(), std::declval<RandIt>()))
                 >> futures;
-            auto chunk_size = get_chunk_size(first, last, pool(policy).get_num_threads());
+            auto chunk_size = get_chunk_size(first, last, extra_split_factor * pool(policy).get_num_threads());
 
             while (first < last) {
                 auto iter_chunk_size = get_iter_chunk_size(first, last, chunk_size);

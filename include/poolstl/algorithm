@@ -56,6 +56,60 @@ namespace std {
 
     /**
      * NOTE: Iterators are expected to be random access.
+     * See std::find_if https://en.cppreference.com/w/cpp/algorithm/find_if
+     */
+    template <class ExecPolicy, class RandIt, class UnaryPredicate>
+    poolstl::internal::enable_if_poolstl_execution_policy<ExecPolicy, RandIt>
+    find_if(ExecPolicy &&policy, RandIt first, RandIt last, UnaryPredicate p) {
+        using diff_t = typename std::iterator_traits<RandIt>::difference_type;
+        diff_t n = std::distance(first, last);
+        std::atomic<diff_t> extremum(n);
+
+        auto futures = poolstl::internal::parallel_chunk_for(std::forward<ExecPolicy>(policy), first, last,
+                                        [&first, &extremum, &p](RandIt chunk_first, RandIt chunk_last) {
+                                            if (std::distance(first, chunk_first) > extremum) {
+                                             // already found by another task
+                                             return;
+                                            }
+
+                                            RandIt chunk_res = std::find_if(chunk_first, chunk_last, p);
+                                            if (chunk_res != chunk_last) {
+                                                // Found, update exremum using a priority update CAS, as discussed in
+                                                // "Reducing Contention Through Priority Updates", PPoPP '13
+                                                const diff_t k = std::distance(first, chunk_res);
+                                                for (diff_t old = extremum; k < old; old = extremum) {
+                                                    extremum.compare_exchange_weak(old, k);
+                                                }
+                                            }
+                                        }, 10); // use small tasks so later ones may exit early if item is already found
+        poolstl::internal::get_futures(futures);
+        return extremum == n ? last : first + extremum;
+    }
+
+    /**
+     * NOTE: Iterators are expected to be random access.
+     * See std::find_if_not https://en.cppreference.com/w/cpp/algorithm/find_if_not
+     */
+    template <class ExecPolicy, class RandIt, class UnaryPredicate>
+    poolstl::internal::enable_if_poolstl_execution_policy<ExecPolicy, RandIt>
+    find_if_not(ExecPolicy &&policy, RandIt first, RandIt last, UnaryPredicate p) {
+        return std::find_if(std::forward<ExecPolicy>(policy), first, last,
+                            [&p](const typename std::iterator_traits<RandIt>::value_type& test) { return !p(test); });
+    }
+
+    /**
+     * NOTE: Iterators are expected to be random access.
+     * See std::find https://en.cppreference.com/w/cpp/algorithm/find
+     */
+    template <class ExecPolicy, class RandIt, class T>
+    poolstl::internal::enable_if_poolstl_execution_policy<ExecPolicy, RandIt>
+    find(ExecPolicy &&policy, RandIt first, RandIt last, const T& value) {
+        return std::find_if(std::forward<ExecPolicy>(policy), first, last,
+                            [&value](const T& test) { return value == test; });
+    }
+
+    /**
+     * NOTE: Iterators are expected to be random access.
      * See std::for_each https://en.cppreference.com/w/cpp/algorithm/for_each
      */
     template <class ExecPolicy, class RandIt, class UnaryFunction>

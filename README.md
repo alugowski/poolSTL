@@ -25,6 +25,10 @@ Algorithms are added on an as-needed basis. If you need one that is not present 
 ### `<algorithm>`
 * [std::copy](https://en.cppreference.com/w/cpp/algorithm/copy)
 * [std::fill](https://en.cppreference.com/w/cpp/algorithm/fill)
+* [std::fill_n](https://en.cppreference.com/w/cpp/algorithm/fill_n)
+* [std::find](https://en.cppreference.com/w/cpp/algorithm/find)
+* [std::find_if](https://en.cppreference.com/w/cpp/algorithm/find_if)
+* [std::find_if_not](https://en.cppreference.com/w/cpp/algorithm/find_if_not)
 * [std::for_each](https://en.cppreference.com/w/cpp/algorithm/for_each)
 * [std::for_each_n](https://en.cppreference.com/w/cpp/algorithm/for_each_n)
 * [std::transform](https://en.cppreference.com/w/cpp/algorithm/transform)

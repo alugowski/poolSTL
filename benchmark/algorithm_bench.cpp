@@ -19,19 +19,19 @@ void all_of(benchmark::State& state) {
     auto values = iota_vector(arr_length);
 
     for ([[maybe_unused]] auto _ : state) {
-        bool res;
         if constexpr (is_policy<ExecPolicy>::value) {
-            res = std::all_of(policy<ExecPolicy>::get(), values.begin(), values.end(), [&](auto v) { return v >= 0; });
+            auto res = std::all_of(policy<ExecPolicy>::get(), values.begin(), values.end(), [&](auto v) { return v >= 0; });
+            benchmark::DoNotOptimize(res);
         } else {
-            res = std::all_of(values.begin(), values.end(), [&](auto v) { return v >= 0; });
+            auto res = std::all_of(values.begin(), values.end(), [&](auto v) { return v >= 0; });
+            benchmark::DoNotOptimize(res);
         }
-        benchmark::DoNotOptimize(res);
         benchmark::ClobberMemory();
     }
 }
 
 BENCHMARK(all_of<seq>)->Name("all_of()")->UseRealTime();
-//BENCHMARK(all_of<poolstl_par>)->Name("all_of(poolstl::par)")->UseRealTime();
+BENCHMARK(all_of<poolstl_par>)->Name("all_of(poolstl::par)")->UseRealTime();
 #ifdef POOLSTL_BENCH_STD_PAR
 BENCHMARK(all_of<std_par>)->Name("all_of(std::execution::par)")->UseRealTime();
 #endif

@@ -15,6 +15,46 @@
 
 namespace ttp = task_thread_pool;
 
+TEST_CASE("any_all_none", "[alg][algorithm]") {
+    for (auto num_threads : test_thread_counts) {
+        ttp::task_thread_pool pool(num_threads);
+
+        for (auto vec_size : test_arr_sizes) {
+            auto haystack = iota_vector(vec_size);
+            auto half = vec_size / 2;
+
+            for (int which = 0; which <= 5; ++which) {
+                auto pred = [&](auto x) -> bool {
+                    switch (which) {
+                        case 0: return x < half;
+                        case 1: return x > half;
+                        case 2: return x == 1;
+                        case 3: return true;
+                        case 4: return false;
+                        default: return x == -1;
+                    }
+                };
+
+                {
+                    auto seq = std::any_of(haystack.cbegin(), haystack.cend(), pred);
+                    auto par = std::any_of(poolstl::par_pool(pool), haystack.cbegin(), haystack.cend(), pred);
+                    REQUIRE(seq == par);
+                }
+                {
+                    auto seq = std::all_of(haystack.cbegin(), haystack.cend(), pred);
+                    auto par = std::all_of(poolstl::par_pool(pool), haystack.cbegin(), haystack.cend(), pred);
+                    REQUIRE(seq == par);
+                }
+                {
+                    auto seq = std::none_of(haystack.cbegin(), haystack.cend(), pred);
+                    auto par = std::none_of(poolstl::par_pool(pool), haystack.cbegin(), haystack.cend(), pred);
+                    REQUIRE(seq == par);
+                }
+            }
+        }
+    }
+}
+
 TEST_CASE("copy", "[alg][algorithm]") {
     for (auto num_threads : test_thread_counts) {
         ttp::task_thread_pool pool(num_threads);

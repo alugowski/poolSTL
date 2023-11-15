@@ -13,6 +13,20 @@ namespace std {
 
     /**
      * NOTE: Iterators are expected to be random access.
+     * See std::copy https://en.cppreference.com/w/cpp/algorithm/copy
+     */
+    template <class ExecPolicy, class RandIt1, class RandIt2>
+    poolstl::internal::enable_if_poolstl_execution_policy<ExecPolicy, void>
+    copy(ExecPolicy &&policy, RandIt1 first, RandIt1 last, RandIt2 dest) {
+        auto futures = poolstl::internal::parallel_chunk_for(std::forward<ExecPolicy>(policy), first, last, dest,
+                     [](RandIt1 chunk_first, RandIt1 chunk_last, RandIt2 chunk_dest) {
+                          std::copy(chunk_first, chunk_last, chunk_dest);
+                     });
+        poolstl::internal::get_futures(futures);
+    }
+
+    /**
+     * NOTE: Iterators are expected to be random access.
      * See std::for_each https://en.cppreference.com/w/cpp/algorithm/for_each
      */
     template <class ExecPolicy, class RandIt, class UnaryFunction>

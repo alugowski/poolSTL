@@ -14,6 +14,24 @@
 
 namespace ttp = task_thread_pool;
 
+TEST_CASE("copy", "[alg][algorithm]") {
+    for (auto num_threads : test_thread_counts) {
+        ttp::task_thread_pool pool(num_threads);
+
+        for (auto num_iters : test_arr_sizes) {
+            auto source = iota_vector(num_iters);
+            std::vector<int> dest1(source.size());
+            std::vector<int> dest2(source.size());
+
+            std::copy(source.cbegin(), source.cend(), dest1.begin());
+            std::copy(poolstl::par_pool(pool), source.cbegin(), source.cend(), dest2.begin());
+
+            REQUIRE(dest1 == dest2);
+        }
+    }
+}
+
+
 TEST_CASE("for_each", "[alg][algorithm]") {
     std::atomic<int> sum{0};
     for (auto num_threads : test_thread_counts) {

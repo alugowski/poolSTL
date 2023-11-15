@@ -68,6 +68,7 @@ Now just use `std::execution::par` as normal. See [supplement_test.cpp](tests/su
 Algorithms are added on an as-needed basis. If you need one that is not present feel free to open an issue or submit a PR.
 
 ### `<algorithm>`
+* [std::copy](https://en.cppreference.com/w/cpp/algorithm/copy)
 * [std::for_each](https://en.cppreference.com/w/cpp/algorithm/for_each)
 * [std::for_each_n](https://en.cppreference.com/w/cpp/algorithm/for_each_n)
 * [std::transform](https://en.cppreference.com/w/cpp/algorithm/transform)

@@ -39,6 +39,35 @@ BENCHMARK(all_of<std_par>)->Name("all_of(std::execution::par)")->UseRealTime();
 ////////////////////////////////
 
 template <class ExecPolicy>
+void find_if(benchmark::State& state) {
+    auto values = iota_vector<int>(arr_length);
+    std::vector<int> haystack(arr_length);
+
+    double needle_frac = ((double)state.range(0)) / 100;
+    int needle_val = (int)((double)values.size() * needle_frac);
+    auto needle = [&needle_val](auto test) { return test >= needle_val; };
+
+    for ([[maybe_unused]] auto _ : state) {
+        if constexpr (is_policy<ExecPolicy>::value) {
+            auto res = std::find_if(policy<ExecPolicy>::get(), values.begin(), values.end(), needle);
+            benchmark::DoNotOptimize(res);
+        } else {
+            auto res = std::find_if(values.begin(), values.end(), needle);
+            benchmark::DoNotOptimize(res);
+        }
+        benchmark::ClobberMemory();
+    }
+}
+
+BENCHMARK(find_if<seq>)->Name("find_if()")->UseRealTime()->ArgName("needle_percentile")->Arg(5)->Arg(50)->Arg(100);
+BENCHMARK(find_if<poolstl_par>)->Name("find_if(poolstl::par)")->UseRealTime()->ArgName("needle_percentile")->Arg(5)->Arg(50)->Arg(100);
+#ifdef POOLSTL_BENCH_STD_PAR
+BENCHMARK(find_if<std_par>)->Name("find_if(std::execution::par)")->UseRealTime()->ArgName("needle_percentile")->Arg(5)->Arg(50)->Arg(100);
+#endif
+
+////////////////////////////////
+
+template <class ExecPolicy>
 void for_each(benchmark::State& state) {
     auto values = iota_vector<int>(arr_length);
     std::vector<int> dest(arr_length);

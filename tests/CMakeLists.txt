@@ -33,13 +33,19 @@ list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
 include(CTest)
 include(Catch)
 
+# tests compiled with C++14 (Catch2 requires C++14)
 add_executable(poolstl_test poolstl_test.cpp)
 target_link_libraries(poolstl_test PRIVATE Catch2::Catch2WithMain poolSTL::poolSTL)
 target_compile_definitions(poolstl_test PRIVATE CATCH_CONFIG_FAST_COMPILE)
-# Catch2 requires C++14, some implemented methods were only added in C++17
 target_compile_features(poolstl_test PUBLIC cxx_std_14)
-
 catch_discover_tests(poolstl_test)
+
+# tests compiled with C++17 (Some supported methods have been added to the standard library)
+add_executable(poolstl_test_cpp17 poolstl_test.cpp)
+target_link_libraries(poolstl_test_cpp17 PRIVATE Catch2::Catch2WithMain poolSTL::poolSTL)
+target_compile_definitions(poolstl_test_cpp17 PRIVATE CATCH_CONFIG_FAST_COMPILE)
+target_compile_features(poolstl_test_cpp17 PUBLIC cxx_std_17)
+catch_discover_tests(poolstl_test_cpp17)
 
 # Dedicated target to ensure C++11 builds work
 add_executable(cpp11_test cpp11_test.cpp)

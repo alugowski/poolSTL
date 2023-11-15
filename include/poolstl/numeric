@@ -21,7 +21,14 @@ namespace std {
     template <class ExecPolicy, class RandIt, class T, class BinaryOp>
     poolstl::internal::enable_if_poolstl_execution_policy<ExecPolicy, T>
     reduce(ExecPolicy &&policy, RandIt first, RandIt last, T init, BinaryOp binop) {
-        return poolstl::internal::parallel_reduce(std::forward<ExecPolicy>(policy), first, last, init, binop);
+        auto futures = poolstl::internal::parallel_chunk_for(std::forward<ExecPolicy>(policy), first, last,
+                                  [init, binop](RandIt chunk_first, RandIt chunk_last) {
+                                      return poolstl::internal::cpp17::reduce(chunk_first, chunk_last, init, binop);
+                                  });
+
+        return poolstl::internal::cpp17::reduce(
+            poolstl::internal::get_wrap(futures.begin()),
+            poolstl::internal::get_wrap(futures.end()), init, binop);
     }
 
     /**

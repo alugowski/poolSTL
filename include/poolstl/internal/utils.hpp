@@ -50,6 +50,13 @@ namespace poolstl {
             return chunk_end;
         }
 
+        template<typename Iterator>
+        Iterator advanced(Iterator iter, typename std::iterator_traits<Iterator>::difference_type offset) {
+            Iterator ret = iter;
+            std::advance(ret, offset);
+            return ret;
+        }
+
         /**
          * An iterator wrapper that calls std::future<>::get().
          * @tparam Iterator
@@ -79,6 +86,13 @@ namespace poolstl {
         template<typename Iterator>
         getting_iter<Iterator> get_wrap(Iterator iter) {
             return getting_iter<Iterator>(iter);
+        }
+
+        template <class Container>
+        void get_futures(Container& futures) {
+            for (auto &future: futures) {
+                future.get();
+            }
         }
 
         /*

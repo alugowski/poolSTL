@@ -18,7 +18,14 @@ namespace std {
     template <class ExecPolicy, class RandIt, class UnaryFunction>
     poolstl::internal::enable_if_poolstl_execution_policy<ExecPolicy, void>
     for_each(ExecPolicy &&policy, RandIt first, RandIt last, UnaryFunction f) {
-        poolstl::internal::parallel_for(std::forward<ExecPolicy>(policy), first, last, f);
+        auto futures = poolstl::internal::parallel_chunk_for(std::forward<ExecPolicy>(policy), first, last,
+                                                             [&f](RandIt chunk_first, RandIt chunk_last) {
+                                                                 // std::for_each(chunk_first, chunk_last, f);
+                                                                 for (; chunk_first != chunk_last; ++chunk_first) {
+                                                                     f(*chunk_first);
+                                                                 }
+                                                             });
+        poolstl::internal::get_futures(futures);
     }
 
     /**
@@ -28,9 +35,8 @@ namespace std {
     template <class ExecPolicy, class RandIt, class Size, class UnaryFunction>
     poolstl::internal::enable_if_poolstl_execution_policy<ExecPolicy, RandIt>
     for_each_n(ExecPolicy &&policy, RandIt first, Size n, UnaryFunction f) {
-        RandIt last = first;
-        std::advance(last, n);
-        poolstl::internal::parallel_for(std::forward<ExecPolicy>(policy), first, last, f);
+        RandIt last = poolstl::internal::advanced(first, n);
+        std::for_each(std::forward<ExecPolicy>(policy), first, last, f);
         return last;
     }
 

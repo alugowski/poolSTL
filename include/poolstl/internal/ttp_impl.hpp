@@ -15,45 +15,25 @@
 namespace poolstl {
     namespace internal {
 
-        template <class ExecPolicy, class RandIt, class UnaryFunction>
-        void parallel_for(ExecPolicy &&policy, RandIt first, RandIt last, UnaryFunction f) {
-            std::vector<std::future<void>> futures;
+        template <class ExecPolicy, class RandIt, class Chunk>
+        std::vector<std::future<decltype(std::declval<Chunk>()(std::declval<RandIt>(), std::declval<RandIt>()))>>
+        parallel_chunk_for(ExecPolicy &&policy, RandIt first, RandIt last, Chunk chunk) {
+            std::vector<std::future<
+                decltype(std::declval<Chunk>()(std::declval<RandIt>(), std::declval<RandIt>()))
+                >> futures;
             auto chunk_size = get_chunk_size(first, last, pool(policy).get_num_threads());
 
             while (first < last) {
                 RandIt loop_end = chunk_advance(first, last, chunk_size);
 
-                futures.emplace_back(pool(policy).submit([&f](RandIt chunk_first, RandIt chunk_last) {
-                    for (; chunk_first != chunk_last; ++chunk_first) {
-                        f(*chunk_first);
-                    }
-                }, first, loop_end));
+                futures.emplace_back(pool(policy).submit(chunk, first, loop_end));
 
                 first = loop_end;
             }
 
-            for (auto &future: futures) {
-                future.get();
-            }
+            return futures;
         }
 
-        template <class ExecPolicy, class RandIt, class T, class BinaryOp>
-        T parallel_reduce(ExecPolicy &&policy, RandIt first, RandIt last, T init, BinaryOp binop) {
-            std::vector<std::future<T>> futures;
-            auto chunk_size = get_chunk_size(first, last, pool(policy).get_num_threads());
-
-            while (first < last) {
-                RandIt loop_end = chunk_advance(first, last, chunk_size);
-
-                futures.emplace_back(pool(policy).submit([init, binop](RandIt chunk_first, RandIt chunk_last) {
-                    return cpp17::reduce(chunk_first, chunk_last, init, binop);
-                }, first, loop_end));
-
-                first = loop_end;
-            }
-
-            return cpp17::reduce(get_wrap(futures.begin()), get_wrap(futures.end()), init, binop);
-        }
     }
 }
 

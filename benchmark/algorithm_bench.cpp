@@ -30,10 +30,10 @@ void all_of(benchmark::State& state) {
     }
 }
 
-BENCHMARK(all_of<seq>)->UseRealTime();
-//BENCHMARK(all_of<poolstl::par>)->UseRealTime();
+BENCHMARK(all_of<seq>)->Name("all_of()")->UseRealTime();
+//BENCHMARK(all_of<poolstl_par>)->Name("all_of(poolstl::par)")->UseRealTime();
 #ifdef POOLSTL_BENCH_STD_PAR
-BENCHMARK(all_of<std_par>)->UseRealTime();
+BENCHMARK(all_of<std_par>)->Name("all_of(std::execution::par)")->UseRealTime();
 #endif
 
 ////////////////////////////////
@@ -54,10 +54,10 @@ void for_each(benchmark::State& state) {
     }
 }
 
-BENCHMARK(for_each<seq>)->UseRealTime();
-BENCHMARK(for_each<poolstl_par>)->UseRealTime();
+BENCHMARK(for_each<seq>)->Name("for_each()")->UseRealTime();
+BENCHMARK(for_each<poolstl_par>)->Name("for_each(poolstl::par)")->UseRealTime();
 #ifdef POOLSTL_BENCH_STD_PAR
-BENCHMARK(for_each<std_par>)->UseRealTime();
+BENCHMARK(for_each<std_par>)->Name("for_each(std::execution::par)")->UseRealTime();
 #endif
 
 ////////////////////////////////
@@ -78,8 +78,8 @@ void transform(benchmark::State& state) {
     }
 }
 
-BENCHMARK(transform<seq>)->UseRealTime();
-//BENCHMARK(transform<poolstl::par>)->UseRealTime();
+BENCHMARK(transform<seq>)->Name("transform()")->UseRealTime();
+//BENCHMARK(transform<poolstl_par>)->Name("transform(poolstl::par)")->UseRealTime();
 #ifdef POOLSTL_BENCH_STD_PAR
-BENCHMARK(transform<std_par>)->UseRealTime();
+BENCHMARK(transform<std_par>)->Name("transform(std::execution::par)")->UseRealTime();
 #endif

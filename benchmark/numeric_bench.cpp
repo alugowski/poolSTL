@@ -32,10 +32,10 @@ void reduce(benchmark::State& state) {
     }
 }
 
-BENCHMARK(reduce<seq>)->UseRealTime();
-BENCHMARK(reduce<poolstl_par>)->UseRealTime();
+BENCHMARK(reduce<seq>)->Name("reduce()")->UseRealTime();
+BENCHMARK(reduce<poolstl_par>)->Name("reduce(poolstl::par)")->UseRealTime();
 #ifdef POOLSTL_BENCH_STD_PAR
-BENCHMARK(reduce<std_par>)->UseRealTime();
+BENCHMARK(reduce<std_par>)->Name("reduce(std::execution::par)")->UseRealTime();
 #endif
 
 ////////////////////////////////

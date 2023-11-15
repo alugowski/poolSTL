@@ -43,11 +43,10 @@ namespace poolstl {
         }
 
         template<typename Iterator>
-        Iterator chunk_advance(const Iterator& iter, const Iterator& last,
-                               typename std::iterator_traits<Iterator>::difference_type chunk_size) {
-            Iterator chunk_end = iter;
-            std::advance(chunk_end, std::min(chunk_size, std::distance(iter, last)));
-            return chunk_end;
+        constexpr typename std::iterator_traits<Iterator>::difference_type
+        get_iter_chunk_size(const Iterator& iter, const Iterator& last,
+                            typename std::iterator_traits<Iterator>::difference_type chunk_size) {
+            return std::min(chunk_size, std::distance(iter, last));
         }
 
         template<typename Iterator>
@@ -102,17 +101,44 @@ namespace poolstl {
         namespace cpp17 = std;
 #else
         namespace cpp17 {
-            template <class InputIt, class Tp, class BinOp>
+
+            // std::reduce
+
+            template<class InputIt, class Tp, class BinOp>
             Tp reduce(InputIt first, InputIt last, Tp init, BinOp b) {
                 for (; first != last; ++first)
                     init = b(init, *first);
                 return init;
             }
-            template <class InputIt>
+
+            template<class InputIt>
             typename std::iterator_traits<InputIt>::value_type reduce(InputIt first, InputIt last) {
                 return reduce(first, last,
                               typename std::iterator_traits<InputIt>::value_type{},
                               std::plus<typename std::iterator_traits<InputIt>::value_type>());
+            }
+
+            // std::transform
+
+            template<class InputIt, class OutputIt, class UnaryOperation>
+            OutputIt transform(InputIt first1, InputIt last1, OutputIt d_first,
+                               UnaryOperation unary_op) {
+                while (first1 != last1) {
+                    *d_first++ = unary_op(*first1++);
+                }
+
+                return d_first;
+            }
+
+            template<class InputIt1, class InputIt2, class OutputIt, class BinaryOperation>
+            OutputIt transform(InputIt1 first1, InputIt1 last1,
+                               InputIt2 first2, OutputIt d_first,
+                               BinaryOperation binary_op) {
+                while (first1 != last1) {
+                    *d_first++ = binary_op(*first1++, *first2++);
+                }
+
+                return d_first;
             }
         }
 #endif

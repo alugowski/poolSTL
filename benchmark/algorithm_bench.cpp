@@ -79,7 +79,7 @@ void transform(benchmark::State& state) {
 }
 
 BENCHMARK(transform<seq>)->Name("transform()")->UseRealTime();
-//BENCHMARK(transform<poolstl_par>)->Name("transform(poolstl::par)")->UseRealTime();
+BENCHMARK(transform<poolstl_par>)->Name("transform(poolstl::par)")->UseRealTime();
 #ifdef POOLSTL_BENCH_STD_PAR
 BENCHMARK(transform<std_par>)->Name("transform(std::execution::par)")->UseRealTime();
 #endif

@@ -40,6 +40,42 @@ namespace std {
         return last;
     }
 
+    /**
+     * NOTE: Iterators are expected to be random access.
+     * See std::for_each_n https://en.cppreference.com/w/cpp/algorithm/transform
+     */
+    template <class ExecPolicy, class RandIt1, class RandIt2, class UnaryOperation>
+    poolstl::internal::enable_if_poolstl_execution_policy<ExecPolicy, RandIt2>
+    transform(ExecPolicy&& policy, RandIt1 first1, RandIt1 last1,
+              RandIt2 dest, UnaryOperation unary_op) {
+
+        auto futures = poolstl::internal::parallel_chunk_for(std::forward<ExecPolicy>(policy), first1, last1, dest,
+                 [&unary_op](RandIt1 chunk_first1, RandIt1 chunk_last1, RandIt2 dest_first) {
+                      return poolstl::internal::cpp17::transform(chunk_first1, chunk_last1, dest_first, unary_op);
+                 });
+        poolstl::internal::get_futures(futures);
+        return dest + std::distance(first1, last1);
+    }
+
+    /**
+     * NOTE: Iterators are expected to be random access.
+     * See std::for_each_n https://en.cppreference.com/w/cpp/algorithm/transform
+     */
+    template <class ExecPolicy, class RandIt1, class RandIt2, class RandIt3, class BinaryOperation>
+    poolstl::internal::enable_if_poolstl_execution_policy<ExecPolicy, RandIt3>
+    transform(ExecPolicy&& policy, RandIt1 first1, RandIt1 last1,
+              RandIt2 first2, RandIt3 dest, BinaryOperation binary_op) {
+
+        auto futures = poolstl::internal::parallel_chunk_for(std::forward<ExecPolicy>(policy), first1, last1,
+                                                             first2, dest,
+                 [&binary_op](RandIt1 chunk_first1, RandIt1 chunk_last1, RandIt1 chunk_first2, RandIt3 dest_first) {
+                     return poolstl::internal::cpp17::transform(chunk_first1, chunk_last1,
+                                                                chunk_first2, dest_first, binary_op);
+                 });
+        poolstl::internal::get_futures(futures);
+        return dest + std::distance(first1, last1);
+    }
+
 }
 
 #endif

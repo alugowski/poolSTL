@@ -17,15 +17,14 @@
 #include "numeric"
 
 /*
- * Optionally alias poolstl::par as std::execution::par to enable poolSTL to fill in for missing compiler support.
+ * Optionally alias `poolstl::par` as `std::execution::par` to enable poolSTL to fill in for missing compiler support.
  *
  * USE AT YOUR OWN RISK!
  *
- * To do this define POOLSTL_STD_SUPPLEMENT before including poolstl.hpp.
+ * To use this define POOLSTL_STD_SUPPLEMENT=1 before including poolstl.hpp.
  *
- * This aliasing will not happen if native support exists. If this autodetection fails for you:
- *   - define POOLSTL_ALLOW_SUPPLEMENT=0 to disable
- *   - define POOLSTL_FORCE_SUPPLEMENT to force enable (use with great care!)
+ * This aliasing will not happen if native support exists. If this autodetection fails for you,
+ * define POOLSTL_ALLOW_SUPPLEMENT=0 to disable this feature.
  */
 #ifndef POOLSTL_ALLOW_SUPPLEMENT
 #define POOLSTL_ALLOW_SUPPLEMENT 1
@@ -39,7 +38,7 @@
 #endif
 #endif
 
-#if !defined(__cpp_lib_parallel_algorithm) || defined(POOLSTL_FORCE_SUPPLEMENT)
+#if !defined(__cpp_lib_parallel_algorithm)
 namespace std {
     namespace execution {
         using ::poolstl::execution::parallel_policy;

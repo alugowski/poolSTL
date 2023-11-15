@@ -81,7 +81,7 @@ namespace std {
                                                     extremum.compare_exchange_weak(old, k);
                                                 }
                                             }
-                                        }, 10); // use small tasks so later ones may exit early if item is already found
+                                        }, 8); // use small tasks so later ones may exit early if item is already found
         poolstl::internal::get_futures(futures);
         return extremum == n ? last : first + extremum;
     }

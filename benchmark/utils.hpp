@@ -8,9 +8,21 @@
 #define POOLSTL_BENCH_UTILS_HPP
 
 #include <algorithm>
+
 #ifdef POOLSTL_BENCH_STD_PAR
+// Benchmarking std::execution::par requested. Verify it is available.
+#if __cplusplus >= 201603L || (defined(_MSVC_LANG) && _MSVC_LANG >= 201603L)
+#if __has_include(<execution>)
 #include <execution>
 #endif
+#endif
+
+#if !defined(__cpp_lib_parallel_algorithm)
+// native parallel algorithms not available
+#undef POOLSTL_BENCH_STD_PAR
+#endif
+#endif
+
 #include <numeric>
 #include <utility>
 #include <vector>

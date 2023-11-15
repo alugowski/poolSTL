@@ -42,7 +42,7 @@ namespace std {
 
     /**
      * NOTE: Iterators are expected to be random access.
-     * See std::for_each_n https://en.cppreference.com/w/cpp/algorithm/transform
+     * See std::transform https://en.cppreference.com/w/cpp/algorithm/transform
      */
     template <class ExecPolicy, class RandIt1, class RandIt2, class UnaryOperation>
     poolstl::internal::enable_if_poolstl_execution_policy<ExecPolicy, RandIt2>
@@ -59,7 +59,7 @@ namespace std {
 
     /**
      * NOTE: Iterators are expected to be random access.
-     * See std::for_each_n https://en.cppreference.com/w/cpp/algorithm/transform
+     * See std::transform https://en.cppreference.com/w/cpp/algorithm/transform
      */
     template <class ExecPolicy, class RandIt1, class RandIt2, class RandIt3, class BinaryOperation>
     poolstl::internal::enable_if_poolstl_execution_policy<ExecPolicy, RandIt3>

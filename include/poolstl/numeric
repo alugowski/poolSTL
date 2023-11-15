@@ -16,7 +16,7 @@ namespace std {
 
     /**
      * NOTE: Iterators are expected to be random access.
-     * See std::for_each https://en.cppreference.com/w/cpp/algorithm/reduce
+     * See std::reduce https://en.cppreference.com/w/cpp/algorithm/reduce
      */
     template <class ExecPolicy, class RandIt, class T, class BinaryOp>
     poolstl::internal::enable_if_poolstl_execution_policy<ExecPolicy, T>
@@ -33,7 +33,7 @@ namespace std {
 
     /**
      * NOTE: Iterators are expected to be random access.
-     * See std::for_each https://en.cppreference.com/w/cpp/algorithm/reduce
+     * See std::reduce https://en.cppreference.com/w/cpp/algorithm/reduce
      */
     template <class ExecPolicy, class RandIt, class T>
     poolstl::internal::enable_if_poolstl_execution_policy<ExecPolicy, T>
@@ -43,7 +43,7 @@ namespace std {
 
     /**
      * NOTE: Iterators are expected to be random access.
-     * See std::for_each https://en.cppreference.com/w/cpp/algorithm/reduce
+     * See std::reduce https://en.cppreference.com/w/cpp/algorithm/reduce
      */
     template <class ExecPolicy, class RandIt>
     poolstl::internal::enable_if_poolstl_execution_policy<

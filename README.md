@@ -31,6 +31,7 @@ Algorithms are added on an as-needed basis. If you need one that is not present 
 
 ### `<numeric>`
 * [std::reduce](https://en.cppreference.com/w/cpp/algorithm/reduce)
+* [std::transform_reduce](https://en.cppreference.com/w/cpp/algorithm/transform_reduce) (C++17 only)
 
 Note: All iterators must be random access.
 

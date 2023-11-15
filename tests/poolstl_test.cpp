@@ -178,6 +178,38 @@ TEST_CASE("reduce", "[alg][numeric]") {
     }
 }
 
+#if POOLSTL_HAVE_CXX17_LIB
+TEST_CASE("transform_reduce_1", "[alg][numeric]") {
+    for (auto num_threads : test_thread_counts) {
+        ttp::task_thread_pool pool(num_threads);
+
+        for (auto num_iters : test_arr_sizes) {
+            auto v = iota_vector(num_iters);
+
+            auto doubler = [&](auto x) { return 2*x; };
+            auto seq = std::transform_reduce(v.cbegin(), v.cend(), 0, std::plus<>(), doubler);
+            auto par = std::transform_reduce(poolstl::par_pool(pool), v.cbegin(), v.cend(), 0, std::plus<>(), doubler);
+            REQUIRE(seq == par);
+        }
+    }
+}
+
+TEST_CASE("transform_reduce_2", "[alg][numeric]") {
+    for (auto num_threads : test_thread_counts) {
+        ttp::task_thread_pool pool(num_threads);
+
+        for (auto num_iters : test_arr_sizes) {
+            auto v1 = iota_vector(num_iters);
+            auto v2 = iota_vector(num_iters);
+
+            auto seq = std::transform_reduce(v1.cbegin(), v1.cend(), v2.cbegin(), 0);
+            auto par = std::transform_reduce(poolstl::par_pool(pool), v1.cbegin(), v1.cend(), v2.cbegin(), 0);
+            REQUIRE(seq == par);
+        }
+    }
+}
+#endif
+
 TEST_CASE("default_pool", "[execution]") {
     std::atomic<int> sum{0};
     for (auto num_iters : test_arr_sizes) {

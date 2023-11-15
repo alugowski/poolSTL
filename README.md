@@ -23,6 +23,7 @@ Tested in CI on GCC 7+, Clang/LLVM 5+, Apple Clang, MSVC.
 Algorithms are added on an as-needed basis. If you need one that is not present feel free to open an issue or submit a PR.
 
 ### `<algorithm>`
+* [std::all_of](https://en.cppreference.com/w/cpp/algorithm/all_of), [std::any_of](https://en.cppreference.com/w/cpp/algorithm/any_of), [std::none_of](https://en.cppreference.com/w/cpp/algorithm/none_of)
 * [std::copy](https://en.cppreference.com/w/cpp/algorithm/copy)
 * [std::fill](https://en.cppreference.com/w/cpp/algorithm/fill)
 * [std::fill_n](https://en.cppreference.com/w/cpp/algorithm/fill_n)

@@ -173,6 +173,35 @@ namespace std {
         return dest + std::distance(first1, last1);
     }
 
+    /**
+     * NOTE: Iterators are expected to be random access.
+     * See std::all_of https://en.cppreference.com/w/cpp/algorithm/all_of
+     */
+    template <class ExecPolicy, typename RandIt, typename Predicate>
+    poolstl::internal::enable_if_poolstl_execution_policy<ExecPolicy, bool>
+    all_of(ExecPolicy&& policy, RandIt first, RandIt last, Predicate pred) {
+        return last == std::find_if_not(std::forward<ExecPolicy>(policy), first, last, pred);
+    }
+
+    /**
+     * NOTE: Iterators are expected to be random access.
+     * See std::none_of https://en.cppreference.com/w/cpp/algorithm/none_of
+     */
+    template <class ExecPolicy, typename RandIt, typename Predicate>
+    poolstl::internal::enable_if_poolstl_execution_policy<ExecPolicy, bool>
+    none_of(ExecPolicy&& policy, RandIt first, RandIt last, Predicate pred) {
+        return last == std::find_if(std::forward<ExecPolicy>(policy), first, last, pred);
+    }
+
+    /**
+     * NOTE: Iterators are expected to be random access.
+     * See std::any_of https://en.cppreference.com/w/cpp/algorithm/any_of
+     */
+    template <class ExecPolicy, typename RandIt, typename Predicate>
+    poolstl::internal::enable_if_poolstl_execution_policy<ExecPolicy, bool>
+    any_of(ExecPolicy&& policy, RandIt first, RandIt last, Predicate pred) {
+        return !std::none_of(std::forward<ExecPolicy>(policy), first, last, pred);
+    }
 }
 
 #endif

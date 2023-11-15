@@ -27,6 +27,35 @@ namespace std {
 
     /**
      * NOTE: Iterators are expected to be random access.
+     * See std::fill https://en.cppreference.com/w/cpp/algorithm/fill
+     */
+    template <class ExecPolicy, class RandIt, class Tp>
+    poolstl::internal::enable_if_poolstl_execution_policy<ExecPolicy, void>
+    fill(ExecPolicy &&policy, RandIt first, RandIt last, const Tp& value) {
+        auto futures = poolstl::internal::parallel_chunk_for(std::forward<ExecPolicy>(policy), first, last,
+                                                             [&value](RandIt chunk_first, RandIt chunk_last) {
+                                                                 std::fill(chunk_first, chunk_last, value);
+                                                             });
+        poolstl::internal::get_futures(futures);
+    }
+
+    /**
+     * NOTE: Iterators are expected to be random access.
+     * See std::fill_n https://en.cppreference.com/w/cpp/algorithm/fill_n
+     */
+    template <class ExecPolicy, class RandIt, class Size, class Tp>
+    poolstl::internal::enable_if_poolstl_execution_policy<ExecPolicy, RandIt>
+    fill_n(ExecPolicy &&policy, RandIt first, Size n, const Tp& value) {
+        if (n <= 0) {
+            return first;
+        }
+        RandIt last = poolstl::internal::advanced(first, n);
+        std::fill(std::forward<ExecPolicy>(policy), first, last, value);
+        return last;
+    }
+
+    /**
+     * NOTE: Iterators are expected to be random access.
      * See std::for_each https://en.cppreference.com/w/cpp/algorithm/for_each
      */
     template <class ExecPolicy, class RandIt, class UnaryFunction>

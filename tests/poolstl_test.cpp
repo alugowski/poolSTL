@@ -31,6 +31,40 @@ TEST_CASE("copy", "[alg][algorithm]") {
     }
 }
 
+TEST_CASE("fill", "[alg][algorithm]") {
+    for (auto num_threads : test_thread_counts) {
+        ttp::task_thread_pool pool(num_threads);
+
+        for (auto num_iters : test_arr_sizes) {
+            std::vector<int> dest1(num_iters);
+            std::vector<int> dest2(num_iters);
+
+            std::fill(dest1.begin(), dest1.end(), num_iters);
+            std::fill(poolstl::par_pool(pool), dest2.begin(), dest2.end(), num_iters);
+
+            REQUIRE(dest1 == dest2);
+        }
+    }
+}
+
+#if POOLSTL_HAVE_CXX17_LIB
+TEST_CASE("fill_n", "[alg][algorithm]") {
+    for (auto num_threads : test_thread_counts) {
+        ttp::task_thread_pool pool(num_threads);
+
+        auto vec_size = *std::max_element(test_arr_sizes.cbegin(), test_arr_sizes.cend());
+        for (auto num_iters : test_arr_sizes) {
+            auto dest1 = iota_vector(vec_size);
+            auto dest2 = iota_vector(vec_size);
+
+            std::fill_n(dest1.begin(), num_iters, num_iters);
+            std::fill_n(poolstl::par_pool(pool), dest2.begin(), num_iters, num_iters);
+
+            REQUIRE(dest1 == dest2);
+        }
+    }
+}
+#endif
 
 TEST_CASE("for_each", "[alg][algorithm]") {
     std::atomic<int> sum{0};

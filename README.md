@@ -69,6 +69,7 @@ Algorithms are added on an as-needed basis. If you need one that is not present 
 
 ### `<algorithm>`
 * [std::copy](https://en.cppreference.com/w/cpp/algorithm/copy)
+* [std::fill](https://en.cppreference.com/w/cpp/algorithm/fill)
 * [std::for_each](https://en.cppreference.com/w/cpp/algorithm/for_each)
 * [std::for_each_n](https://en.cppreference.com/w/cpp/algorithm/for_each_n)
 * [std::transform](https://en.cppreference.com/w/cpp/algorithm/transform)

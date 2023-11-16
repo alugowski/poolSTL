@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.12...3.26)
 
-# Read the version from poolstl.hpp
+# Read the version from header
 set(VERSION_HEADER_FILE include/poolstl/internal/utils.hpp)
 file(STRINGS ${VERSION_HEADER_FILE} VERSION_MAJOR_STR REGEX "define .*_VERSION_MAJOR")
 file(STRINGS ${VERSION_HEADER_FILE} VERSION_MINOR_STR REGEX "define .*_VERSION_MINOR")

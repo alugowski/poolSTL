@@ -99,6 +99,61 @@ namespace poolstl {
             return futures;
         }
 
+        /**
+         * Sort a range in parallel.
+         *
+         * @param stable Whether to use std::stable_sort or std::sort
+         */
+        template <class ExecPolicy, class RandIt, class Compare>
+        void parallel_sort(ExecPolicy &&policy, RandIt first, RandIt last, Compare comp, bool stable) {
+            if (first == last) {
+                return;
+            }
+
+            // Sort chunks in parallel
+            auto futures = parallel_chunk_for(std::forward<ExecPolicy>(policy), first, last,
+                             [&comp, stable] (RandIt chunk_first, RandIt chunk_last) {
+                                 if (stable) {
+                                     std::stable_sort(chunk_first, chunk_last, comp);
+                                 } else {
+                                     std::sort(chunk_first, chunk_last, comp);
+                                 }
+                                 return std::make_pair(chunk_first, chunk_last);
+                             });
+
+            // Merge the sorted ranges
+            using SortedRange = std::pair<RandIt, RandIt>;
+            auto& task_pool = pool(policy);
+            std::vector<SortedRange> subranges;
+            do {
+                for (auto& future : futures) {
+                    subranges.emplace_back(future.get());
+                }
+                futures.clear();
+
+                for (std::size_t i = 0; i < subranges.size(); ++i) {
+                    if (i + 1 < subranges.size()) {
+                        // pair up and merge
+                        auto& lhs = subranges[i];
+                        auto& rhs = subranges[i + 1];
+                        futures.emplace_back(task_pool.submit([&comp] (RandIt chunk_first, RandIt chunk_middle,
+                                                                       RandIt chunk_last) {
+                            std::inplace_merge(chunk_first, chunk_middle, chunk_last, comp);
+                            return std::make_pair(chunk_first, chunk_last);
+                        }, lhs.first, lhs.second, rhs.second));
+                        ++i;
+                    } else {
+                        // forward the final extra range
+                        std::promise<SortedRange> p;
+                        futures.emplace_back(p.get_future());
+                        p.set_value(subranges[i]);
+                    }
+                }
+
+                subranges.clear();
+            } while (futures.size() > 1);
+            futures.front().get();
+        }
     }
 }
 

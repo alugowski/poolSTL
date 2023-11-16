@@ -92,6 +92,33 @@ BENCHMARK(for_each<std_par>)->Name("for_each(std::execution::par)")->UseRealTime
 ////////////////////////////////
 
 template <class ExecPolicy>
+void sort(benchmark::State& state) {
+    auto source = random_vector<int>(arr_length / 10);
+
+    for ([[maybe_unused]] auto _ : state) {
+        state.PauseTiming();
+        std::vector<int> values(source);
+        state.ResumeTiming();
+
+        if constexpr (is_policy<ExecPolicy>::value) {
+            std::sort(policy<ExecPolicy>::get(), values.begin(), values.end());
+        } else {
+            std::sort(values.begin(), values.end());
+        }
+        benchmark::DoNotOptimize(values);
+        benchmark::ClobberMemory();
+    }
+}
+
+BENCHMARK(sort<seq>)->Name("sort()")->UseRealTime();
+BENCHMARK(sort<poolstl_par>)->Name("sort(poolstl::par)")->UseRealTime();
+#ifdef POOLSTL_BENCH_STD_PAR
+BENCHMARK(sort<std_par>)->Name("sort(std::execution::par)")->UseRealTime();
+#endif
+
+////////////////////////////////
+
+template <class ExecPolicy>
 void transform(benchmark::State& state) {
     auto values = iota_vector<int>(arr_length);
     std::vector<int> dest(arr_length);

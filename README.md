@@ -25,6 +25,7 @@ Algorithms are added on an as-needed basis. If you need one [open an issue](http
 * [fill](https://en.cppreference.com/w/cpp/algorithm/fill), [fill_n](https://en.cppreference.com/w/cpp/algorithm/fill_n)
 * [find](https://en.cppreference.com/w/cpp/algorithm/find), [find_if](https://en.cppreference.com/w/cpp/algorithm/find_if), [find_if_not](https://en.cppreference.com/w/cpp/algorithm/find_if_not)
 * [for_each](https://en.cppreference.com/w/cpp/algorithm/for_each), [for_each_n](https://en.cppreference.com/w/cpp/algorithm/for_each_n)
+* [sort](https://en.cppreference.com/w/cpp/algorithm/sort), [stable_sort](https://en.cppreference.com/w/cpp/algorithm/stable_sort)
 * [transform](https://en.cppreference.com/w/cpp/algorithm/transform)
 
 ### `<numeric>`
@@ -104,27 +105,30 @@ Results on an M1 Pro (6 power, 2 efficiency cores), with GCC 13:
 -------------------------------------------------------------------------------------------------------
 Benchmark                                                             Time             CPU   Iterations
 -------------------------------------------------------------------------------------------------------
-all_of()/real_time                                                 19.8 ms         19.8 ms           35
-all_of(poolstl::par)/real_time                                     3.87 ms        0.113 ms          175
-all_of(std::execution::par)/real_time                              3.84 ms         3.27 ms          198
-find_if()/needle_percentile:5/real_time                            1.01 ms         1.00 ms          708
-find_if()/needle_percentile:50/real_time                           9.91 ms         9.90 ms           71
-find_if()/needle_percentile:100/real_time                          19.8 ms         19.7 ms           35
-find_if(poolstl::par)/needle_percentile:5/real_time               0.391 ms        0.045 ms         1787
-find_if(poolstl::par)/needle_percentile:50/real_time               1.83 ms        0.081 ms          353
-find_if(poolstl::par)/needle_percentile:100/real_time              3.58 ms        0.085 ms          197
-find_if(std::execution::par)/needle_percentile:5/real_time        0.234 ms        0.227 ms         3051
-find_if(std::execution::par)/needle_percentile:50/real_time        1.87 ms         1.79 ms          377
-find_if(std::execution::par)/needle_percentile:100/real_time       3.91 ms         3.51 ms          177
-for_each()/real_time                                               94.8 ms         94.8 ms            7
-for_each(poolstl::par)/real_time                                   20.2 ms        0.041 ms           37
-for_each(std::execution::par)/real_time                            17.1 ms         14.2 ms           45
-transform()/real_time                                              95.8 ms         95.8 ms            7
-transform(poolstl::par)/real_time                                  20.8 ms        0.041 ms           38
-transform(std::execution::par)/real_time                           16.8 ms         14.3 ms           41
-reduce()/real_time                                                 15.1 ms         15.1 ms           46
-reduce(poolstl::par)/real_time                                     4.21 ms        0.046 ms          165
-reduce(std::execution::par)/real_time                              3.55 ms         3.09 ms          199
+all_of()/real_time                                                 19.9 ms         19.9 ms           35
+all_of(poolstl::par)/real_time                                     3.47 ms        0.119 ms          198
+all_of(std::execution::par)/real_time                              3.45 ms         3.25 ms          213
+find_if()/needle_percentile:5/real_time                           0.988 ms        0.987 ms          712
+find_if()/needle_percentile:50/real_time                           9.87 ms         9.86 ms           71
+find_if()/needle_percentile:100/real_time                          19.7 ms         19.7 ms           36
+find_if(poolstl::par)/needle_percentile:5/real_time               0.405 ms        0.050 ms         1730
+find_if(poolstl::par)/needle_percentile:50/real_time               1.85 ms        0.096 ms          393
+find_if(poolstl::par)/needle_percentile:100/real_time              3.64 ms        0.102 ms          193
+find_if(std::execution::par)/needle_percentile:5/real_time        0.230 ms        0.220 ms         3103
+find_if(std::execution::par)/needle_percentile:50/real_time        1.75 ms         1.60 ms          410
+find_if(std::execution::par)/needle_percentile:100/real_time       3.51 ms         3.24 ms          204
+for_each()/real_time                                               94.6 ms         94.6 ms            7
+for_each(poolstl::par)/real_time                                   18.7 ms        0.044 ms           36
+for_each(std::execution::par)/real_time                            15.3 ms         12.9 ms           46
+sort()/real_time                                                    603 ms          602 ms            1
+sort(poolstl::par)/real_time                                        146 ms        0.667 ms            5
+sort(std::execution::par)/real_time                                 121 ms         95.1 ms            6
+transform()/real_time                                              95.0 ms         94.9 ms            7
+transform(poolstl::par)/real_time                                  17.4 ms        0.037 ms           38
+transform(std::execution::par)/real_time                           15.3 ms         13.2 ms           45
+reduce()/real_time                                                 15.2 ms         15.2 ms           46
+reduce(poolstl::par)/real_time                                     4.06 ms        0.044 ms          169
+reduce(std::execution::par)/real_time                              3.38 ms         3.16 ms          214
 ```
 
 # poolSTL as `std::execution::par` Substitute

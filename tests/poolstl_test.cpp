@@ -72,6 +72,25 @@ TEST_CASE("copy", "[alg][algorithm]") {
     }
 }
 
+TEST_CASE("copy_n", "[alg][algorithm]") {
+    for (auto num_threads : test_thread_counts) {
+        ttp::task_thread_pool pool(num_threads);
+
+        auto vec_size = *std::max_element(test_arr_sizes.cbegin(), test_arr_sizes.cend());
+        for (auto num_iters : test_arr_sizes) {
+            auto source = iota_vector(num_iters);
+            std::vector<int> dest1(vec_size);
+            std::vector<int> dest2(vec_size);
+
+            std::copy_n(source.cbegin(), num_iters, dest1.begin());
+            std::copy_n(poolstl::par_pool(pool), source.cbegin(), num_iters, dest2.begin());
+
+            REQUIRE(dest1 == dest2);
+        }
+    }
+}
+
+
 TEST_CASE("fill", "[alg][algorithm]") {
     for (auto num_threads : test_thread_counts) {
         ttp::task_thread_pool pool(num_threads);

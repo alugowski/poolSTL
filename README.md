@@ -16,12 +16,12 @@ It is not meant as a full implementation, only the basics are expected to be cov
 Supports C++11 and higher, C++17 preferred.
 Tested in CI on GCC 7+, Clang/LLVM 5+, Apple Clang, MSVC.
 
-## Implemented algorithms
+## Implemented Algorithms
 Algorithms are added on an as-needed basis. If you need one [open an issue](https://github.com/alugowski/poolSTL/issues) or contribute a PR.
 
 ### `<algorithm>`
 * [all_of](https://en.cppreference.com/w/cpp/algorithm/all_of), [any_of](https://en.cppreference.com/w/cpp/algorithm/any_of), [none_of](https://en.cppreference.com/w/cpp/algorithm/none_of)
-* [copy](https://en.cppreference.com/w/cpp/algorithm/copy)
+* [copy](https://en.cppreference.com/w/cpp/algorithm/copy), [copy_n](https://en.cppreference.com/w/cpp/algorithm/copy_n)
 * [fill](https://en.cppreference.com/w/cpp/algorithm/fill), [fill_n](https://en.cppreference.com/w/cpp/algorithm/fill_n)
 * [find](https://en.cppreference.com/w/cpp/algorithm/find), [find_if](https://en.cppreference.com/w/cpp/algorithm/find_if), [find_if_not](https://en.cppreference.com/w/cpp/algorithm/find_if_not)
 * [for_each](https://en.cppreference.com/w/cpp/algorithm/for_each), [for_each_n](https://en.cppreference.com/w/cpp/algorithm/for_each_n)
@@ -49,21 +49,21 @@ int main() {
     std::vector<int> v = {0, 1, 2, 3, 4, 5};
     auto sum = std::reduce(poolstl::par, v.cbegin(), v.cend());
     //                     ^^^^^^^^^^^^
-    //                     Just add this to make your code parallel.
+    //                     Add this to make your code parallel.
     std::cout << "Sum=" << sum << std::endl;
     return 0;
 }
 ```
 
-### Pool control
+### Controlling Thread Pool Size
 
 The thread pool used by `poolstl::par` is managed internally by poolSTL. It is started on first use.
 
-Full control over thread count, startup/shutdown, etc. with your own [thread pool](https://github.com/alugowski/task-thread-pool)
-and `poolstl::par_pool`:
+Use your own [thread pool](https://github.com/alugowski/task-thread-pool)
+with `poolstl::par_pool` for full control over thread count, startup/shutdown, etc.:
 
 ```c++
-task_thread_pool::task_thread_pool pool;
+task_thread_pool::task_thread_pool pool{4};  // 4 threads
 
 std::reduce(poolstl::par_pool(pool), v.cbegin(), v.cbegin());
 ```
@@ -127,7 +127,7 @@ reduce(poolstl::par)/real_time                                     4.21 ms      
 reduce(std::execution::par)/real_time                              3.55 ms         3.09 ms          199
 ```
 
-# poolSTL as `std::execution::par` substitute
+# poolSTL as `std::execution::par` Substitute
 **USE AT YOUR OWN RISK!**
 
 Two-line hack for missing compiler support. A no-op on compilers with support.

@@ -27,6 +27,21 @@ namespace std {
 
     /**
      * NOTE: Iterators are expected to be random access.
+     * See std::copy_n https://en.cppreference.com/w/cpp/algorithm/copy_n
+     */
+    template <class ExecPolicy, class RandIt1, class Size, class RandIt2>
+    poolstl::internal::enable_if_poolstl_execution_policy<ExecPolicy, RandIt2>
+    copy_n(ExecPolicy &&policy, RandIt1 first, Size n, RandIt2 dest) {
+        if (n <= 0) {
+            return dest;
+        }
+        RandIt1 last = poolstl::internal::advanced(first, n);
+        std::copy(std::forward<ExecPolicy>(policy), first, last, dest);
+        return poolstl::internal::advanced(dest, n);
+    }
+
+    /**
+     * NOTE: Iterators are expected to be random access.
      * See std::fill https://en.cppreference.com/w/cpp/algorithm/fill
      */
     template <class ExecPolicy, class RandIt, class Tp>

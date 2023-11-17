@@ -29,6 +29,7 @@ set(HEADER_FILES
         include/poolstl/algorithm
         include/poolstl/execution
         include/poolstl/numeric
+        include/poolstl/seq_fwd.hpp
         include/poolstl/internal/utils.hpp
         include/poolstl/internal/ttp_impl.hpp
         include/poolstl/internal/task_thread_pool.hpp)

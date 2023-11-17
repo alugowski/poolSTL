@@ -8,6 +8,7 @@
 #define POOLSTL_BENCH_UTILS_HPP
 
 #include <algorithm>
+#include <random>
 
 #ifdef POOLSTL_BENCH_STD_PAR
 // Benchmarking std::execution::par requested. Verify it is available.
@@ -66,6 +67,16 @@ template <typename T=int>
 std::vector<T> iota_vector(size_t size, T init=0) {
     std::vector<T> ret(size);
     std::iota(ret.begin(), ret.end(), init);
+    return ret;
+}
+
+template <typename T=int>
+std::vector<T> random_vector(size_t size, T init=0) {
+    std::vector<T> ret = iota_vector<T>(size, T{});
+
+    std::mt19937 g(1);
+
+    std::shuffle(ret.begin(), ret.end(), g);
     return ret;
 }
 

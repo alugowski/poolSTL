@@ -195,6 +195,59 @@ TEST_CASE("for_each_n", "[alg][algorithm]") {
     }
 }
 
+TEST_CASE("sort", "[alg][algorithm]") {
+    for (auto num_threads : test_thread_counts) {
+        ttp::task_thread_pool pool(num_threads);
+
+        for (auto num_iters : test_arr_sizes) {
+            for (int scramble_type = 0; scramble_type <= 2; ++scramble_type) {
+                auto source = iota_vector(num_iters);
+                switch (scramble_type) {
+                    case 0: std::reverse(source.begin(), source.end()); break;
+                    case 1: scramble(source); break;
+                    default: break;
+                }
+                std::vector<int> dest1(source);
+                std::vector<int> dest2(source);
+
+                std::sort(dest1.begin(), dest1.end());
+                std::sort(poolstl::par_pool(pool), dest2.begin(), dest2.end());
+
+                REQUIRE(dest1 == dest2);
+            }
+        }
+    }
+}
+
+TEST_CASE("stable_sort", "[alg][algorithm]") {
+    for (auto num_threads : test_thread_counts) {
+        ttp::task_thread_pool pool(num_threads);
+
+        for (auto num_iters : test_arr_sizes) {
+            for (int scramble_type = 0; scramble_type <= 2; ++scramble_type) {
+                auto source = iota_vector<stable_sort_element>(num_iters);
+                for (auto& s: source) {
+                    s.compared /= 3;
+                    s.nc = (int)rng();
+                }
+
+                switch (scramble_type) {
+                    case 0: std::reverse(source.begin(), source.end()); break;
+                    case 1: scramble(source); break;
+                    default: break;
+                }
+                std::vector<stable_sort_element> dest1(source);
+                std::vector<stable_sort_element> dest2(source);
+
+                std::stable_sort(dest1.begin(), dest1.end());
+                std::stable_sort(poolstl::par_pool(pool), dest2.begin(), dest2.end());
+
+                REQUIRE(dest1 == dest2);
+            }
+        }
+    }
+}
+
 TEST_CASE("transform_1", "[alg][algorithm]") {
     for (auto num_threads : test_thread_counts) {
         ttp::task_thread_pool pool(num_threads);
@@ -309,3 +362,5 @@ TEST_CASE("default_pool", "[execution]") {
         REQUIRE(sum == num_iters);
     }
 }
+
+std::mt19937 rng{1};

@@ -6,6 +6,8 @@
 #ifndef POOLSTL_ALGORITHM_HPP
 #define POOLSTL_ALGORITHM_HPP
 
+#include <functional>
+
 #include "execution"
 #include "internal/ttp_impl.hpp"
 
@@ -150,6 +152,48 @@ namespace std {
         RandIt last = poolstl::internal::advanced(first, n);
         std::for_each(std::forward<ExecPolicy>(policy), first, last, f);
         return last;
+    }
+
+    /**
+     * NOTE: Iterators are expected to be random access.
+     * See std::sort https://en.cppreference.com/w/cpp/algorithm/sort
+     */
+    template <class ExecPolicy, class RandIt, class Compare>
+    poolstl::internal::enable_if_poolstl_execution_policy<ExecPolicy, void>
+    sort(ExecPolicy &&policy, RandIt first, RandIt last, Compare comp) {
+        poolstl::internal::parallel_sort(std::forward<ExecPolicy>(policy), first, last, comp, false);
+    }
+
+    /**
+     * NOTE: Iterators are expected to be random access.
+     * See std::sort https://en.cppreference.com/w/cpp/algorithm/sort
+     */
+    template <class ExecPolicy, class RandIt>
+    poolstl::internal::enable_if_poolstl_execution_policy<ExecPolicy, void>
+    sort(ExecPolicy &&policy, RandIt first, RandIt last) {
+        using T = typename std::iterator_traits<RandIt>::value_type;
+        poolstl::internal::parallel_sort(std::forward<ExecPolicy>(policy), first, last, std::less<T>(), false);
+    }
+
+    /**
+     * NOTE: Iterators are expected to be random access.
+     * See std::stable_sort https://en.cppreference.com/w/cpp/algorithm/stable_sort
+     */
+    template <class ExecPolicy, class RandIt, class Compare>
+    poolstl::internal::enable_if_poolstl_execution_policy<ExecPolicy, void>
+    stable_sort(ExecPolicy &&policy, RandIt first, RandIt last, Compare comp) {
+        poolstl::internal::parallel_sort(std::forward<ExecPolicy>(policy), first, last, comp, true);
+    }
+
+    /**
+     * NOTE: Iterators are expected to be random access.
+     * See std::stable_sort https://en.cppreference.com/w/cpp/algorithm/stable_sort
+     */
+    template <class ExecPolicy, class RandIt>
+    poolstl::internal::enable_if_poolstl_execution_policy<ExecPolicy, void>
+    stable_sort(ExecPolicy &&policy, RandIt first, RandIt last) {
+        using T = typename std::iterator_traits<RandIt>::value_type;
+        poolstl::internal::parallel_sort(std::forward<ExecPolicy>(policy), first, last, std::less<T>(), true);
     }
 
     /**

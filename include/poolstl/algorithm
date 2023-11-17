@@ -45,6 +45,36 @@ namespace std {
 
     /**
      * NOTE: Iterators are expected to be random access.
+     * See std::count_if https://en.cppreference.com/w/cpp/algorithm/count_if
+     */
+    template <class ExecPolicy, class RandIt, class UnaryPredicate>
+    poolstl::internal::enable_if_par<ExecPolicy, typename iterator_traits<RandIt>::difference_type>
+    count_if(ExecPolicy&& policy, RandIt first, RandIt last, UnaryPredicate p) {
+        using T = typename iterator_traits<RandIt>::difference_type;
+
+        auto futures = poolstl::internal::parallel_chunk_for(std::forward<ExecPolicy>(policy), first, last,
+                                                             [&p](RandIt chunk_first, RandIt chunk_last) {
+                                                                 return std::count_if(chunk_first, chunk_last, p);
+                                                             });
+
+        return poolstl::internal::cpp17::reduce(
+            poolstl::internal::get_wrap(futures.begin()),
+            poolstl::internal::get_wrap(futures.end()), 0, std::plus<T>());
+    }
+
+    /**
+     * NOTE: Iterators are expected to be random access.
+     * See std::count https://en.cppreference.com/w/cpp/algorithm/count
+     */
+    template <class ExecPolicy, class RandIt, class T>
+    poolstl::internal::enable_if_par<ExecPolicy, typename iterator_traits<RandIt>::difference_type>
+    count(ExecPolicy&& policy, RandIt first, RandIt last, const T& value) {
+        return std::count_if(std::forward<ExecPolicy>(policy), first, last,
+                             [&value](const T& test) { return test == value; });
+    }
+
+    /**
+     * NOTE: Iterators are expected to be random access.
      * See std::fill https://en.cppreference.com/w/cpp/algorithm/fill
      */
     template <class ExecPolicy, class RandIt, class Tp>

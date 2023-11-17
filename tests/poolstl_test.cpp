@@ -90,6 +90,28 @@ TEST_CASE("copy_n", "[alg][algorithm]") {
     }
 }
 
+TEST_CASE("count", "[alg][algorithm]") {
+    for (auto num_threads : test_thread_counts) {
+        ttp::task_thread_pool pool(num_threads);
+
+        for (auto vec_size : test_arr_sizes) {
+            auto haystack = iota_vector(vec_size);
+
+            {
+                int needle = 5;
+                auto seq = std::count(poolstl::par_if<>(false), haystack.cbegin(), haystack.cend(), needle);
+                auto par = std::count(poolstl::par_pool(pool),  haystack.cbegin(), haystack.cend(), needle);
+                REQUIRE(seq == par);
+            }
+            {
+                auto pred = [&](auto x) { return x % 2 == 0; };
+                auto seq = std::count_if(poolstl::par_if<>(false), haystack.cbegin(), haystack.cend(), pred);
+                auto par = std::count_if(poolstl::par_pool(pool),  haystack.cbegin(), haystack.cend(), pred);
+                REQUIRE(seq == par);
+            }
+        }
+    }
+}
 
 TEST_CASE("fill", "[alg][algorithm]") {
     for (auto num_threads : test_thread_counts) {
@@ -367,15 +389,13 @@ TEST_CASE("execution_policies", "[execution]") {
     ttp::task_thread_pool pool;
     std::vector<int> v = {0, 1, 2, 3, 4, 5};
 
-    REQUIRE(15 == std::reduce(poolstl::par, v.cbegin(), v.cend()));
-    REQUIRE(15 == std::reduce(poolstl::par_pool(pool), v.cbegin(), v.cend()));
-#if POOLSTL_HAVE_CXX17_LIB
-    REQUIRE(15 == std::reduce(poolstl::seq, v.cbegin(), v.cend()));
-    REQUIRE(15 == std::reduce(poolstl::par_if<>(false), v.cbegin(), v.cend()));
-    REQUIRE(15 == std::reduce(poolstl::par_if<>(true), v.cbegin(), v.cend()));
-    REQUIRE(15 == std::reduce(poolstl::par_if_pool<>(false, pool), v.cbegin(), v.cend()));
-    REQUIRE(15 == std::reduce(poolstl::par_if_pool<>(true, pool), v.cbegin(), v.cend()));
-#endif
+    REQUIRE(1 == std::count(poolstl::par, v.cbegin(), v.cend(), 5));
+    REQUIRE(1 == std::count(poolstl::par_pool(pool), v.cbegin(), v.cend(), 5));
+    REQUIRE(1 == std::count(poolstl::seq, v.cbegin(), v.cend(), 5));
+    REQUIRE(1 == std::count(poolstl::par_if<>(false), v.cbegin(), v.cend(), 5));
+    REQUIRE(1 == std::count(poolstl::par_if<>(true), v.cbegin(), v.cend(), 5));
+    REQUIRE(1 == std::count(poolstl::par_if_pool<>(false, pool), v.cbegin(), v.cend(), 5));
+    REQUIRE(1 == std::count(poolstl::par_if_pool<>(true, pool), v.cbegin(), v.cend(), 5));
 }
 
 std::mt19937 rng{1};

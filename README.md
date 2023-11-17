@@ -28,6 +28,7 @@ Algorithms are added on an as-needed basis. If you need one [open an issue](http
 ### `<algorithm>`
 * [all_of](https://en.cppreference.com/w/cpp/algorithm/all_of), [any_of](https://en.cppreference.com/w/cpp/algorithm/any_of), [none_of](https://en.cppreference.com/w/cpp/algorithm/none_of)
 * [copy](https://en.cppreference.com/w/cpp/algorithm/copy), [copy_n](https://en.cppreference.com/w/cpp/algorithm/copy_n)
+* [count](https://en.cppreference.com/w/cpp/algorithm/count), [count_if](https://en.cppreference.com/w/cpp/algorithm/count_if)
 * [fill](https://en.cppreference.com/w/cpp/algorithm/fill), [fill_n](https://en.cppreference.com/w/cpp/algorithm/fill_n)
 * [find](https://en.cppreference.com/w/cpp/algorithm/find), [find_if](https://en.cppreference.com/w/cpp/algorithm/find_if), [find_if_not](https://en.cppreference.com/w/cpp/algorithm/find_if_not)
 * [for_each](https://en.cppreference.com/w/cpp/algorithm/for_each), [for_each_n](https://en.cppreference.com/w/cpp/algorithm/for_each_n)

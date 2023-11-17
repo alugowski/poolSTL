@@ -5,11 +5,17 @@
 
 Thread pool-based implementation of [parallel standard library algorithms](https://en.cppreference.com/w/cpp/algorithm).
 
-Those algorithms are great, but compiler support varies.
+C++17 introduced parallel versions of many algorithms in the standard library.
+These parallel versions accept an *Execution Policy* as their first argument.
+Different policies allow the implementation to parallelize the algorithm in a different way,
+such as using threads, vectorization, or even GPU.
+Policies can be supplied by the compiler or by libraries like this one.
+
+Unfortunately compiler support for the [standard policies](https://en.cppreference.com/w/cpp/algorithm/execution_policy_tag) varies.
 PoolSTL is a *supplement* to fill in the support gaps, so we can use parallel algorithms now.
-It is not meant as a full implementation, only the basics are expected to be covered.  Use this if:
+It is not meant as a full implementation; only the basics are expected to be covered.  Use this if:
 * you only need the basics, including no nested parallel calls.
-* to support a [compiler lacking native support](https://en.cppreference.com/w/cpp/compiler_support/17) (see "Parallel algorithms and execution policies").
+* must use a [compiler lacking native support](https://en.cppreference.com/w/cpp/compiler_support/17) (see "Parallel algorithms and execution policies").
 * you cannot link against TBB for whatever reason.
 * the [Parallel STL](https://www.intel.com/content/www/us/en/developer/articles/guide/get-started-with-parallel-stl.html) is too heavy.
 
@@ -42,8 +48,9 @@ PoolSTL provides these execution policies:
 * `poolstl::par`: Substitute for [`std::execution::par`](https://en.cppreference.com/w/cpp/algorithm/execution_policy_tag).
 * `poolstl::par_pool`: `par` but with your own [thread pool](https://github.com/alugowski/task-thread-pool).
 * `poolstl::seq`: Substitute for `std::execution::seq`. Simply calls the sequential (non-policy) overload.
+* `poolstl::par_if`, and `par_if_pool`: choose parallel or sequential at runtime. See below.
 
-In other words, use `poolstl::par` to make your code parallel. Complete example:
+In short, use `poolstl::par` to make your code parallel. Complete example:
 ```c++
 #include <iostream>
 #include <poolstl/poolstl.hpp>
@@ -58,7 +65,7 @@ int main() {
 }
 ```
 
-### Controlling Thread Pool Size
+### Controlling Thread Pool Size with `par_pool`
 
 The thread pool used by `poolstl::par` is managed internally by poolSTL. It is started on first use.
 
@@ -71,11 +78,25 @@ task_thread_pool::task_thread_pool pool{4};  // 4 threads
 std::reduce(poolstl::par_pool(pool), v.cbegin(), v.cbegin());
 ```
 
+### Choosing Parallel or Sequential at Runtime with `par_if`
+
+Sometimes the choice whether to parallelize or not should be made at runtime. For example, you may wish to support both
+small and large inputs. The small inputs may not amortize the cost of starting threads and are best done sequentially.
+
+Use `poolstl::par_if` to select between `par` and `seq` at runtime:
+```c++
+bool is_parallel = true;
+
+std::reduce(poolstl::par_if(is_parallel), v.cbegin(), v.cbegin());
+```
+
 ## Installation
 
 ### Single File
 
 Copy a single-file amalgamated `poolstl.hpp` from the [latest release](https://github.com/alugowski/poolSTL/releases) and into your project.
+
+Note: Some compilers, including non-Apple Clang and GCC 8 and older, require the `-lpthread` linker flag to use C++11 threads.
 
 ### CMake
 

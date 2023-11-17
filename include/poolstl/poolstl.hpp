@@ -42,7 +42,7 @@
 #if !defined(__cpp_lib_parallel_algorithm)
 namespace std {
     namespace execution {
-        using ::poolstl::execution::sequential_policy;
+        using ::poolstl::execution::sequenced_policy;
         using ::poolstl::execution::seq;
         using ::poolstl::execution::parallel_policy;
         using ::poolstl::execution::par;

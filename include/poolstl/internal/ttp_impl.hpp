@@ -6,6 +6,7 @@
 #ifndef POOLSTL_INTERNAL_TTP_IMPL_HPP
 #define POOLSTL_INTERNAL_TTP_IMPL_HPP
 
+#include <algorithm>
 #include <future>
 #include <numeric>
 #include <vector>

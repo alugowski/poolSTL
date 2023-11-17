@@ -8,7 +8,7 @@ Thread pool-based implementation of [parallel standard library algorithms](https
 Those algorithms are great, but compiler support varies.
 PoolSTL is a *supplement* to fill in the support gaps, so we can use parallel algorithms now.
 It is not meant as a full implementation, only the basics are expected to be covered.  Use this if:
-* you only need the basics.
+* you only need the basics, including no nested parallel calls.
 * to support a [compiler lacking native support](https://en.cppreference.com/w/cpp/compiler_support/17) (see "Parallel algorithms and execution policies").
 * you cannot link against TBB for whatever reason.
 * the [Parallel STL](https://www.intel.com/content/www/us/en/developer/articles/guide/get-started-with-parallel-stl.html) is too heavy.
@@ -38,10 +38,12 @@ All in `std::` namespace.
 
 ## Usage
 
-PoolSTL provides `poolstl::par` and `poolstl::par_pool` execution policies. Pass either one of these as the first argument
-to one of the supported algorithms and your code will be parallel.
+PoolSTL provides these execution policies:
+* `poolstl::par`: Substitute for [`std::execution::par`](https://en.cppreference.com/w/cpp/algorithm/execution_policy_tag).
+* `poolstl::par_pool`: `par` but with your own [thread pool](https://github.com/alugowski/task-thread-pool).
+* `poolstl::seq`: Substitute for `std::execution::seq`. Simply calls the sequential (non-policy) overload.
 
-In other words, use `poolstl::par` as you would use [`std::execution::par`](https://en.cppreference.com/w/cpp/algorithm/execution_policy_tag). Complete example:
+In other words, use `poolstl::par` to make your code parallel. Complete example:
 ```c++
 #include <iostream>
 #include <poolstl/poolstl.hpp>
@@ -131,7 +133,7 @@ reduce(poolstl::par)/real_time                                     4.06 ms      
 reduce(std::execution::par)/real_time                              3.38 ms         3.16 ms          214
 ```
 
-# poolSTL as `std::execution::par` Substitute
+# poolSTL as `std::execution::par`
 **USE AT YOUR OWN RISK!**
 
 Two-line hack for missing compiler support. A no-op on compilers with support.
@@ -145,3 +147,6 @@ If not found then poolSTL will alias its `poolstl::par` as `std::execution::par`
 ```
 
 Now just use `std::execution::par` as normal, and poolSTL will fill in as necessary. See [supplement_test.cpp](tests/supplement_test.cpp).
+
+Example use case: You *can* link against TBB, so you'll use native support on GCC 9+, Clang, MSVC, etc.
+PoolSTL will fill in automatically on GCC <9 and Apple Clang.

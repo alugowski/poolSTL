@@ -15,6 +15,7 @@
 #include "execution"
 #include "algorithm"
 #include "numeric"
+#include "seq_fwd.hpp"
 
 /*
  * Optionally alias `poolstl::par` as `std::execution::par` to enable poolSTL to fill in for missing compiler support.
@@ -41,6 +42,8 @@
 #if !defined(__cpp_lib_parallel_algorithm)
 namespace std {
     namespace execution {
+        using ::poolstl::execution::sequential_policy;
+        using ::poolstl::execution::seq;
         using ::poolstl::execution::parallel_policy;
         using ::poolstl::execution::par;
     }

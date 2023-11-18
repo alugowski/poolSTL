@@ -24,9 +24,20 @@ int main() {
     }
 
     std::vector<int> v = {0, 1, 2, 3, 4, 5};
-    std::for_each(std::execution::par, v.cbegin(), v.cend(), [](int x) {
-        std::cout << x << " ";
+    std::for_each(std::execution::seq, v.cbegin(), v.cend(), [](int x) {
+        std::cout << x;
     });
     std::cout << std::endl;
+
+    std::for_each(std::execution::par, v.cbegin(), v.cend(), [](int x) {
+        std::cout << x;
+    });
+    std::cout << std::endl;
+
+    std::for_each(std::execution::par_unseq, v.cbegin(), v.cend(), [](int x) {
+        std::cout << x;
+    });
+    std::cout << std::endl;
+
     return 0;
 }

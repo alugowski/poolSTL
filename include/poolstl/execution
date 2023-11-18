@@ -18,24 +18,42 @@ namespace poolstl {
 
     namespace execution {
         /**
-         * A sequential policy that simply forwards to the non-policy overload.
-         */
-        struct sequenced_policy {};
-        struct parallel_policy {
-            // For internal use only
-            static constexpr std::true_type use_default_pool() { return std::true_type{}; }
-        };
-
-        constexpr sequenced_policy seq{};
-        constexpr parallel_policy par{};
-
-        /**
          * A parallel policy with user-specified thread pool
          */
         struct par_pool {
             static constexpr std::false_type use_default_pool() { return std::false_type{}; }
             explicit par_pool(ttp::task_thread_pool &pool) : pool(pool) {}
             ttp::task_thread_pool &pool;
+        };
+
+        /**
+         * A sequential policy that simply forwards to the non-policy overload.
+         */
+        struct sequenced_policy {};
+        struct parallel_policy {
+            // For internal use only
+            static constexpr std::true_type use_default_pool() { return std::true_type{}; }
+
+            par_pool on(ttp::task_thread_pool& pool) const {
+                return par_pool(pool);
+            }
+        };
+
+        constexpr sequenced_policy seq{};
+        constexpr parallel_policy par{};
+
+        /**
+         * Like `par_if`, but with a user-specified pool.
+         * @tparam FwdSeq If sequential, will use `FwdSeq{}`.
+         */
+        template <typename FwdSeq = sequenced_policy>
+        struct par_if_pool {
+            explicit par_if_pool(bool call_par, ttp::task_thread_pool &pool): call_par(call_par), pool(pool) {}
+            bool call_par;
+            ttp::task_thread_pool &pool;
+
+            par_pool get_par() { return par_pool{pool}; }
+            FwdSeq get_seq() { return FwdSeq{}; }
         };
 
         /**
@@ -48,28 +66,13 @@ namespace poolstl {
             explicit par_if(bool call_par): call_par(call_par) {}
             bool call_par;
 
-//            using fwd_par_type = FwdPar;
-//            using fwd_seq_type = FwdSeq;
-
             FwdPar get_par() { return FwdPar{}; }
             FwdSeq get_seq() { return FwdSeq{}; }
-        };
 
-        /**
-         * Like `par_if`, but with a user-specified pool.
-         * @tparam FwdSeq If sequential, will use `FwdSeq{}`.
-         */
-        template <typename FwdSeq = sequenced_policy>
-        struct par_if_pool {
-            explicit par_if_pool(bool call_par, ttp::task_thread_pool &pool): call_par(call_par), pool(pool) {}
-            bool call_par;
-            ttp::task_thread_pool &pool;
 
-//            using fwd_par_type = par_pool;
-//            using fwd_seq_type = FwdSeq;
-
-            par_pool get_par() { return par_pool{pool}; }
-            FwdSeq get_seq() { return FwdSeq{}; }
+            par_if_pool<FwdSeq> on(ttp::task_thread_pool& pool) const {
+                return par_if_pool<FwdSeq>(call_par, pool);
+            }
         };
     }
 

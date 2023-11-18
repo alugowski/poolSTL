@@ -46,6 +46,8 @@ namespace std {
         using ::poolstl::execution::seq;
         using ::poolstl::execution::parallel_policy;
         using ::poolstl::execution::par;
+        using parallel_unsequenced_policy = ::poolstl::execution::parallel_policy;
+        constexpr parallel_unsequenced_policy par_unseq{};
     }
 }
 

@@ -37,17 +37,17 @@ TEST_CASE("any_all_none", "[alg][algorithm]") {
 
                 {
                     auto seq = std::any_of(poolstl::par_if<>(false), haystack.cbegin(), haystack.cend(), pred);
-                    auto par = std::any_of(poolstl::par_pool(pool),  haystack.cbegin(), haystack.cend(), pred);
+                    auto par = std::any_of(poolstl::par.on(pool),    haystack.cbegin(), haystack.cend(), pred);
                     REQUIRE(seq == par);
                 }
                 {
                     auto seq = std::all_of(poolstl::par_if<>(false), haystack.cbegin(), haystack.cend(), pred);
-                    auto par = std::all_of(poolstl::par_pool(pool),  haystack.cbegin(), haystack.cend(), pred);
+                    auto par = std::all_of(poolstl::par.on(pool),    haystack.cbegin(), haystack.cend(), pred);
                     REQUIRE(seq == par);
                 }
                 {
                     auto seq = std::none_of(poolstl::par_if<>(false), haystack.cbegin(), haystack.cend(), pred);
-                    auto par = std::none_of(poolstl::par_pool(pool),  haystack.cbegin(), haystack.cend(), pred);
+                    auto par = std::none_of(poolstl::par.on(pool),    haystack.cbegin(), haystack.cend(), pred);
                     REQUIRE(seq == par);
                 }
             }
@@ -83,7 +83,7 @@ TEST_CASE("copy_n", "[alg][algorithm]") {
             std::vector<int> dest2(vec_size);
 
             std::copy_n(poolstl::par_if<>(false), source.cbegin(), num_iters, dest1.begin());
-            std::copy_n(poolstl::par_pool(pool),  source.cbegin(), num_iters, dest2.begin());
+            std::copy_n(poolstl::par.on(pool),    source.cbegin(), num_iters, dest2.begin());
 
             REQUIRE(dest1 == dest2);
         }
@@ -100,13 +100,13 @@ TEST_CASE("count", "[alg][algorithm]") {
             {
                 int needle = 5;
                 auto seq = std::count(poolstl::par_if<>(false), haystack.cbegin(), haystack.cend(), needle);
-                auto par = std::count(poolstl::par_pool(pool),  haystack.cbegin(), haystack.cend(), needle);
+                auto par = std::count(poolstl::par.on(pool),    haystack.cbegin(), haystack.cend(), needle);
                 REQUIRE(seq == par);
             }
             {
                 auto pred = [&](auto x) { return x % 2 == 0; };
                 auto seq = std::count_if(poolstl::par_if<>(false), haystack.cbegin(), haystack.cend(), pred);
-                auto par = std::count_if(poolstl::par_pool(pool),  haystack.cbegin(), haystack.cend(), pred);
+                auto par = std::count_if(poolstl::par.on(pool),    haystack.cbegin(), haystack.cend(), pred);
                 REQUIRE(seq == par);
             }
         }
@@ -122,7 +122,7 @@ TEST_CASE("fill", "[alg][algorithm]") {
             std::vector<int> dest2(num_iters);
 
             std::fill(poolstl::par_if<>(false), dest1.begin(), dest1.end(), num_iters);
-            std::fill(poolstl::par_pool(pool),  dest2.begin(), dest2.end(), num_iters);
+            std::fill(poolstl::par.on(pool),    dest2.begin(), dest2.end(), num_iters);
 
             REQUIRE(dest1 == dest2);
         }
@@ -140,7 +140,7 @@ TEST_CASE("fill_n", "[alg][algorithm]") {
             auto dest2 = iota_vector(vec_size);
 
             std::fill_n(poolstl::par_if<>(false), dest1.begin(), num_iters, num_iters);
-            std::fill_n(poolstl::par_pool(pool),  dest2.begin(), num_iters, num_iters);
+            std::fill_n(poolstl::par.on(pool),    dest2.begin(), num_iters, num_iters);
 
             REQUIRE(dest1 == dest2);
         }
@@ -163,14 +163,14 @@ TEST_CASE("find", "[alg][algorithm]") {
                 {
                     // calls find_if
                     auto seq = std::find(poolstl::par_if<>(false), haystack.cbegin(), haystack.cend(), needle);
-                    auto par = std::find(poolstl::par_pool(pool),  haystack.cbegin(), haystack.cend(), needle);
+                    auto par = std::find(poolstl::par.on(pool),    haystack.cbegin(), haystack.cend(), needle);
                     REQUIRE(seq == par);
                 }
                 {
                     auto pred = [&](auto x) { return x < needle; };
                     // calls find_if
                     auto seq = std::find_if_not(poolstl::par_if<>(false), haystack.cbegin(), haystack.cend(), pred);
-                    auto par = std::find_if_not(poolstl::par_pool(pool),  haystack.cbegin(), haystack.cend(), pred);
+                    auto par = std::find_if_not(poolstl::par.on(pool),    haystack.cbegin(), haystack.cend(), pred);
                     REQUIRE(seq == par);
                 }
             }
@@ -192,7 +192,7 @@ TEST_CASE("for_each", "[alg][algorithm]") {
                 if (is_sequential) {
                     std::for_each(poolstl::par_if<>(false), v.cbegin(), v.cend(), f);
                 } else {
-                    std::for_each(poolstl::par_pool(pool),  v.cbegin(), v.cend(), f);
+                    std::for_each(poolstl::par.on(pool),    v.cbegin(), v.cend(), f);
                 }
                 REQUIRE(sum == num_iters);
             }
@@ -215,7 +215,7 @@ TEST_CASE("for_each_n", "[alg][algorithm]") {
             REQUIRE(sum == num_iters);
             sum = 0;
 #endif
-            std::for_each_n(poolstl::par_pool(pool),  v.cbegin(), num_iters, f);
+            std::for_each_n(poolstl::par.on(pool),    v.cbegin(), num_iters, f);
             REQUIRE(sum == num_iters);
         }
     }
@@ -285,7 +285,7 @@ TEST_CASE("transform_1", "[alg][algorithm]") {
 
             auto unary_op = [&](auto x) { return 2*x; };
 
-            auto par_res = std::transform(poolstl::par_pool(pool),  v.cbegin(), v.cend(), dest1.begin(), unary_op);
+            auto par_res = std::transform(poolstl::par.on(pool),    v.cbegin(), v.cend(), dest1.begin(), unary_op);
 #if POOLSTL_HAVE_CXX17_LIB
             auto seq_res = std::transform(poolstl::par_if<>(false), v.cbegin(), v.cend(), dest1.begin(), unary_op);
 #else
@@ -313,7 +313,7 @@ TEST_CASE("transform_2", "[alg][algorithm]") {
 
             auto binary_op = [&](auto a, auto b) { return a + b; };
 
-            auto par_res = std::transform(poolstl::par_pool(pool),  v1.cbegin(), v1.cend(), v2.cbegin(), dest1.begin(), binary_op);
+            auto par_res = std::transform(poolstl::par.on(pool),    v1.cbegin(), v1.cend(), v2.cbegin(), dest1.begin(), binary_op);
 #if POOLSTL_HAVE_CXX17_LIB
             auto seq_res = std::transform(poolstl::par_if<>(false), v1.cbegin(), v1.cend(), v2.cbegin(), dest1.begin(), binary_op);
 #else
@@ -341,7 +341,7 @@ TEST_CASE("reduce", "[alg][numeric]") {
 #else
             auto seq = poolstl::internal::cpp17::reduce(v.cbegin(), v.cend());
 #endif
-            auto par = std::reduce(poolstl::par_pool(pool),  v.cbegin(), v.cend());
+            auto par = std::reduce(poolstl::par.on(pool),    v.cbegin(), v.cend());
             REQUIRE(seq == par);
         }
     }
@@ -357,7 +357,7 @@ TEST_CASE("transform_reduce_1", "[alg][numeric]") {
 
             auto doubler = [&](auto x) { return 2*x; };
             auto seq = std::transform_reduce(poolstl::par_if<>(false), v.cbegin(), v.cend(), 0, std::plus<>(), doubler);
-            auto par = std::transform_reduce(poolstl::par_pool(pool),  v.cbegin(), v.cend(), 0, std::plus<>(), doubler);
+            auto par = std::transform_reduce(poolstl::par.on(pool),    v.cbegin(), v.cend(), 0, std::plus<>(), doubler);
             REQUIRE(seq == par);
         }
     }
@@ -372,7 +372,7 @@ TEST_CASE("transform_reduce_2", "[alg][numeric]") {
             auto v2 = iota_vector(num_iters);
 
             auto seq = std::transform_reduce(poolstl::par_if<>(false), v1.cbegin(), v1.cend(), v2.cbegin(), 0);
-            auto par = std::transform_reduce(poolstl::par_pool(pool),  v1.cbegin(), v1.cend(), v2.cbegin(), 0);
+            auto par = std::transform_reduce(poolstl::par.on(pool),    v1.cbegin(), v1.cend(), v2.cbegin(), 0);
             REQUIRE(seq == par);
         }
     }
@@ -390,12 +390,12 @@ TEST_CASE("execution_policies", "[execution]") {
     std::vector<int> v = {0, 1, 2, 3, 4, 5};
 
     REQUIRE(1 == std::count(poolstl::par, v.cbegin(), v.cend(), 5));
-    REQUIRE(1 == std::count(poolstl::par_pool(pool), v.cbegin(), v.cend(), 5));
+    REQUIRE(1 == std::count(poolstl::par.on(pool), v.cbegin(), v.cend(), 5));
     REQUIRE(1 == std::count(poolstl::seq, v.cbegin(), v.cend(), 5));
     REQUIRE(1 == std::count(poolstl::par_if<>(false), v.cbegin(), v.cend(), 5));
     REQUIRE(1 == std::count(poolstl::par_if<>(true), v.cbegin(), v.cend(), 5));
-    REQUIRE(1 == std::count(poolstl::par_if_pool<>(false, pool), v.cbegin(), v.cend(), 5));
-    REQUIRE(1 == std::count(poolstl::par_if_pool<>(true, pool), v.cbegin(), v.cend(), 5));
+    REQUIRE(1 == std::count(poolstl::par_if<>(false).on(pool), v.cbegin(), v.cend(), 5));
+    REQUIRE(1 == std::count(poolstl::par_if<>(true).on(pool), v.cbegin(), v.cend(), 5));
 }
 
 std::mt19937 rng{1};

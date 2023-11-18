@@ -59,7 +59,7 @@ namespace std {
 
         return poolstl::internal::cpp17::reduce(
             poolstl::internal::get_wrap(futures.begin()),
-            poolstl::internal::get_wrap(futures.end()), 0, std::plus<T>());
+            poolstl::internal::get_wrap(futures.end()), (T)0, std::plus<T>());
     }
 
     /**

@@ -10,10 +10,22 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <poolstl/poolstl.hpp>
+#include <poolstl/iota_iter.hpp>
 
 #include "utils.hpp"
 
 namespace ttp = task_thread_pool;
+using poolstl::iota_iter;
+
+
+namespace Catch {
+    template<>
+    struct StringMaker<iota_iter<long>> {
+        static std::string convert( iota_iter<long> const& value ) {
+            return std::to_string(*value);
+        }
+    };
+}
 
 TEST_CASE("any_all_none", "[alg][algorithm]") {
     for (auto num_threads : test_thread_counts) {
@@ -396,6 +408,111 @@ TEST_CASE("execution_policies", "[execution]") {
     REQUIRE(1 == std::count(poolstl::par_if<>(true), v.cbegin(), v.cend(), 5));
     REQUIRE(1 == std::count(poolstl::par_if<>(false).on(pool), v.cbegin(), v.cend(), 5));
     REQUIRE(1 == std::count(poolstl::par_if<>(true).on(pool), v.cbegin(), v.cend(), 5));
+}
+
+TEST_CASE("iota_iter(use)", "[iterator]") {
+    REQUIRE(15 == std::reduce(poolstl::par, iota_iter<int>(0), iota_iter<int>(6)));
+    REQUIRE(1 == std::count(poolstl::par, iota_iter<int>(0), iota_iter<int>(6), 5));
+    REQUIRE(1 == std::count(iota_iter<int>(0), iota_iter<int>(6), 5));
+}
+
+TEST_CASE("iota_iter(def)", "[iterator]") {
+    // Test that iota_iter meets RandomAccessIterator requirements.
+    // See https://en.cppreference.com/w/cpp/iterator/random_access_iterator
+
+    long a_init = 5;
+    long b_init = 10;
+    iota_iter<long> a(a_init);
+    iota_iter<long> b(b_init);
+    auto n = std::distance(a, b);
+    REQUIRE(n == 5);
+
+    // (a += n) is equal to b.
+    REQUIRE((a += n) == b);
+    a = a_init; b = b_init;
+
+    // std::addressof(a += n) is equal to std::addressof(a). [1]
+    REQUIRE(std::addressof(a += n) == std::addressof(a));
+
+    // (a + n) is equal to (a += n).
+    {
+        auto lhs = (a + n);
+        REQUIRE(lhs == (a += n));
+        a = a_init; b = b_init;
+    }
+
+    // (a + n) is equal to (n + a).
+    REQUIRE((a + n) == (n + a));
+
+    // For any two positive integers x and y, if a + (x + y) is valid, then a + (x + y) is equal to (a + x) + y.
+    int x = 12, y = 55;
+    REQUIRE((a + (x + y)) == ((a + x) + y));
+
+    // a + 0 is equal to a.
+    REQUIRE((a + 0) == a);
+
+    // If (a + (n - 1)) is valid, then --b is equal to (a + (n - 1)).
+    REQUIRE(--b == (a + (n - 1)));
+    a = a_init; b = b_init;
+
+    // (b += -n) and (b -= n) are both equal to a.
+    REQUIRE((b += -n) == a);
+    a = a_init; b = b_init;
+
+    REQUIRE((b -= n) == a);
+    a = a_init; b = b_init;
+
+    // std::addressof(b -= n) is equal to std::addressof(b). [1]
+    REQUIRE(std::addressof(b -= n) == std::addressof(b));
+    a = a_init; b = b_init;
+
+    // (b - n) is equal to (b -= n).
+    {
+        auto lhs = (b - n);
+        REQUIRE(lhs == (b -= n));
+        a = a_init; b = b_init;
+    }
+
+    // If b is dereferenceable, then a[n] is valid and is equal to *b.
+    REQUIRE(a[n] == *b);
+
+    // bool(a <= b) is true.
+    REQUIRE(bool(a <= b));
+
+
+    // exercise the other methods
+    REQUIRE(a == a);
+    REQUIRE(a != b);
+    REQUIRE(a < b);
+    REQUIRE(b > a);
+    REQUIRE(b >= a);
+
+    REQUIRE(std::addressof(++a) == std::addressof(a));
+    REQUIRE(std::addressof(--a) == std::addressof(a));
+
+    {
+        auto lhs = a;
+        REQUIRE(lhs == a++);
+    }
+
+    {
+        auto lhs = (a + 1);
+        REQUIRE(lhs == ++a);
+    }
+
+    {
+        auto lhs = a;
+        REQUIRE(lhs == a--);
+    }
+
+    {
+        auto lhs = (a - 1);
+        REQUIRE(lhs == --a);
+    }
+    
+    // default constructible
+    iota_iter<long> c;
+    REQUIRE(*c == 0);
 }
 
 std::mt19937 rng{1};

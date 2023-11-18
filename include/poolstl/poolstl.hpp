@@ -16,6 +16,7 @@
 #include "algorithm"
 #include "numeric"
 #include "seq_fwd.hpp"
+// #include "iota_iter.hpp"  // exclude from amalgamation for size. iota_iter is self-contained in its own right.
 
 /*
  * Optionally alias `poolstl::par` as `std::execution::par` to enable poolSTL to fill in for missing compiler support.

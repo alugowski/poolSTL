@@ -36,6 +36,7 @@ Algorithms are added on an as-needed basis. If you need one [open an issue](http
 * [transform](https://en.cppreference.com/w/cpp/algorithm/transform)
 
 ### `<numeric>`
+* [exclusive_scan](https://en.cppreference.com/w/cpp/algorithm/exclusive_scan) (C++17 only)
 * [reduce](https://en.cppreference.com/w/cpp/algorithm/reduce)
 * [transform_reduce](https://en.cppreference.com/w/cpp/algorithm/transform_reduce) (C++17 only)
 
@@ -195,6 +196,9 @@ sort(std::execution::par)/real_time                                 121 ms      
 transform()/real_time                                              95.0 ms         94.9 ms            7
 transform(poolstl::par)/real_time                                  17.4 ms        0.037 ms           38
 transform(std::execution::par)/real_time                           15.3 ms         13.2 ms           45
+exclusive_scan()/real_time                                         33.7 ms         33.7 ms           21
+exclusive_scan(poolstl::par)/real_time                             11.6 ms        0.095 ms           55
+exclusive_scan(std::execution::par)/real_time                      19.8 ms         15.3 ms           32
 reduce()/real_time                                                 15.2 ms         15.2 ms           46
 reduce(poolstl::par)/real_time                                     4.06 ms        0.044 ms          169
 reduce(std::execution::par)/real_time                              3.38 ms         3.16 ms          214

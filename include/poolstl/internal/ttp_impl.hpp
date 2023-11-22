@@ -17,6 +17,24 @@
 namespace poolstl {
     namespace internal {
 
+#if POOLSTL_HAVE_CXX17_LIB
+        /**
+         * Call std::apply in parallel.
+         */
+        template <class ExecPolicy, class Op, class ArgContainer>
+        std::vector<std::future<void>>
+        parallel_apply(ExecPolicy &&policy, Op op, const ArgContainer& args_list) {
+            std::vector<std::future<void>> futures;
+            auto& task_pool = policy.pool();
+
+            for (const auto& args : args_list) {
+                futures.emplace_back(task_pool.submit([op](const auto& args_fwd) { std::apply(op, args_fwd); }, args));
+            }
+
+            return futures;
+        }
+#endif
+
         /**
          * Chunk a single range.
          */
@@ -26,13 +44,14 @@ namespace poolstl {
             std::vector<std::future<
                 decltype(std::declval<Chunk>()(std::declval<RandIt>(), std::declval<RandIt>()))
                 >> futures;
-            auto chunk_size = get_chunk_size(first, last, extra_split_factor * policy.pool().get_num_threads());
+            auto& task_pool = policy.pool();
+            auto chunk_size = get_chunk_size(first, last, extra_split_factor * task_pool.get_num_threads());
 
             while (first < last) {
                 auto iter_chunk_size = get_iter_chunk_size(first, last, chunk_size);
                 RandIt loop_end = advanced(first, iter_chunk_size);
 
-                futures.emplace_back(policy.pool().submit(chunk, first, loop_end));
+                futures.emplace_back(task_pool.submit(chunk, first, loop_end));
 
                 first = loop_end;
             }
@@ -54,13 +73,14 @@ namespace poolstl {
                     std::declval<RandIt1>(),
                     std::declval<RandIt2>()))
             >> futures;
-            auto chunk_size = get_chunk_size(first1, last1, policy.pool().get_num_threads());
+            auto& task_pool = policy.pool();
+            auto chunk_size = get_chunk_size(first1, last1, task_pool.get_num_threads());
 
             while (first1 < last1) {
                 auto iter_chunk_size = get_iter_chunk_size(first1, last1, chunk_size);
                 RandIt1 loop_end = advanced(first1, iter_chunk_size);
 
-                futures.emplace_back(policy.pool().submit(chunk, first1, loop_end, first2));
+                futures.emplace_back(task_pool.submit(chunk, first1, loop_end, first2));
 
                 first1 = loop_end;
                 std::advance(first2, iter_chunk_size);
@@ -86,13 +106,14 @@ namespace poolstl {
                 std::declval<RandIt2>(),
                 std::declval<RandIt3>()))
             >> futures;
-            auto chunk_size = get_chunk_size(first1, last1, policy.pool().get_num_threads());
+            auto& task_pool = policy.pool();
+            auto chunk_size = get_chunk_size(first1, last1, task_pool.get_num_threads());
 
             while (first1 < last1) {
                 auto iter_chunk_size = get_iter_chunk_size(first1, last1, chunk_size);
                 RandIt1 loop_end = advanced(first1, iter_chunk_size);
 
-                futures.emplace_back(policy.pool().submit(chunk, first1, loop_end, first2, first3));
+                futures.emplace_back(task_pool.submit(chunk, first1, loop_end, first2, first3));
 
                 first1 = loop_end;
                 std::advance(first2, iter_chunk_size);

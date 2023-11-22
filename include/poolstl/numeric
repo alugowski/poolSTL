@@ -30,7 +30,7 @@ namespace std {
         // Pass 1: Chunk the input and find the sum of each chunk
         auto futures = poolstl::internal::parallel_chunk_for(std::forward<ExecPolicy>(policy), first, last,
                              [binop](RandIt1 chunk_first, RandIt1 chunk_last) {
-                                 auto sum = std::reduce(chunk_first, chunk_last, T{}, binop);
+                                 auto sum = std::accumulate(chunk_first, chunk_last, T{}, binop);
                                  return std::make_tuple(std::make_pair(chunk_first, chunk_last), sum);
                              });
 

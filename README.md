@@ -196,9 +196,9 @@ sort(std::execution::par)/real_time                                 121 ms      
 transform()/real_time                                              95.0 ms         94.9 ms            7
 transform(poolstl::par)/real_time                                  17.4 ms        0.037 ms           38
 transform(std::execution::par)/real_time                           15.3 ms         13.2 ms           45
-exclusive_scan()/real_time                                         34.6 ms         34.6 ms           19
-exclusive_scan(poolstl::par)/real_time                             12.0 ms        0.088 ms           57
-exclusive_scan(std::execution::par)/real_time                      20.7 ms         15.5 ms           33
+exclusive_scan()/real_time                                         33.7 ms         33.7 ms           21
+exclusive_scan(poolstl::par)/real_time                             11.6 ms        0.095 ms           55
+exclusive_scan(std::execution::par)/real_time                      19.8 ms         15.3 ms           32
 reduce()/real_time                                                 15.2 ms         15.2 ms           46
 reduce(poolstl::par)/real_time                                     4.06 ms        0.044 ms          169
 reduce(std::execution::par)/real_time                              3.38 ms         3.16 ms          214

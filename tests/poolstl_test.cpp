@@ -370,6 +370,21 @@ TEST_CASE("exclusive_scan", "[alg][algorithm]") {
                 // test in-place
                 std::exclusive_scan(poolstl::par.on(pool), v.begin(), v.end(), v.begin(), init);
                 REQUIRE(v == dest2);
+
+                // test commutativity
+                {
+                    std::vector<std::string> sv;
+                    sv.reserve(v.size());
+                    for (auto val : v) {
+                        sv.emplace_back(std::to_string(val));
+                    }
+                    std::vector<std::string> sdest1(sv.size());
+                    std::vector<std::string> sdest2(sv.size());
+
+                    std::exclusive_scan(poolstl::par_if(false), sv.cbegin(), sv.cend(), sdest1.begin(), std::to_string(init));
+                    std::exclusive_scan(poolstl::par.on(pool),  sv.cbegin(), sv.cend(), sdest2.begin(), std::to_string(init));
+                    REQUIRE(sdest1 == sdest2);
+                }
             }
         }
     }

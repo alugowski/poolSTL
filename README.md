@@ -92,6 +92,50 @@ std::reduce(poolstl::par_if(is_parallel), v.cbegin(), v.cbegin());
 
 Use `poolstl::par_if(is_parallel, pool)` to control the thread pool used by `par`, if selected.
 
+# Examples
+
+## Parallelize a `for-each` loop
+
+```c++
+std::vector<int> v = {0, 1, 2, 3, 4, 5};
+
+// Sequential
+for (auto& value : v) {
+    std::cout << value;  // loop body
+}
+
+// Parallel
+std::for_each(poolstl::par, v.begin(), v.end(), [](auto& value) {
+    std::cout << value;  // loop body
+});
+```
+
+## Parallelize a `for` loop (counter)
+
+```c++
+// Sequential
+for (int i = 0; i < 100 : ++i) {
+    std::cout << i;  // loop body
+}
+
+// Parallel
+using poolstl::iota_iter;
+
+std::for_each(poolstl::par, iota_iter<int>(0), iota_iter<int>(100), [](auto i) {
+    std::cout << i;  // loop body
+});
+```
+
+
+
+## Parallel Sort
+
+```c++
+std::vector<int> v = {5, 2, 1, 3, 0, 4};
+std::sort(poolstl::par, v.begin(), v.end();
+// `v` is now {0, 1, 2, 3, 4, 5}
+```
+
 ## Installation
 
 ### Single File

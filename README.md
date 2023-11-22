@@ -48,7 +48,7 @@ All in `std::` namespace.
 PoolSTL provides these execution policies:
 * `poolstl::par`: Substitute for [`std::execution::par`](https://en.cppreference.com/w/cpp/algorithm/execution_policy_tag). Parallelized using a [thread pool](https://github.com/alugowski/task-thread-pool).
 * `poolstl::seq`: Substitute for `std::execution::seq`. Simply calls the sequential (non-policy) overload.
-* `poolstl::par_if()`: choose parallel or sequential at runtime. See below.
+* `poolstl::par_if()`: (C++17 only) choose parallel or sequential at runtime. See below.
 
 In short, use `poolstl::par` to make your code parallel. Complete example:
 ```c++
@@ -90,7 +90,7 @@ bool is_parallel = true;
 std::reduce(poolstl::par_if(is_parallel), v.cbegin(), v.cbegin());
 ```
 
-Use `poolstl::par_if.on(pool)` to control the thread pool used by `par`, if selected.
+Use `poolstl::par_if(is_parallel, pool)` to control the thread pool used by `par`, if selected.
 
 ## Installation
 

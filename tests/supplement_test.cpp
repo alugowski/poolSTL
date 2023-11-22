@@ -5,16 +5,32 @@
 
 #include <iostream>
 #include <numeric>
+#include <variant>
 
 // The <execution> header defines compiler-provided execution policies, but is not always present.
 #if __cplusplus >= 201603L || (defined(_MSVC_LANG) && _MSVC_LANG >= 201603L)
 #if __has_include(<execution>)
+#ifndef POOLSTL_MISSING_NEEDED_TBB
 #include <execution>
+#endif
 #endif
 #endif
 
 #define POOLSTL_STD_SUPPLEMENT
 #include <poolstl/poolstl.hpp>
+
+using std_policy_variant = std::variant<std::execution::parallel_policy, std::execution::sequenced_policy>;
+
+/**
+ * A version of poolstl::par_if that works on the std execution policies.
+ */
+poolstl::variant_policy<std_policy_variant> std_par_if(bool call_par) {
+    if (call_par) {
+        return poolstl::variant_policy(std_policy_variant(std::execution::par));
+    } else {
+        return poolstl::variant_policy(std_policy_variant(std::execution::seq));
+    }
+}
 
 int main() {
     if (std::is_same_v<std::execution::parallel_policy, poolstl::execution::parallel_policy>) {
@@ -38,6 +54,13 @@ int main() {
         std::cout << x;
     });
     std::cout << std::endl;
+
+    for (bool is_parallel : {true, false}) {
+        std::for_each(std_par_if(is_parallel), v.cbegin(), v.cend(), [](int x) {
+            std::cout << x;
+        });
+        std::cout << std::endl;
+    }
 
     return 0;
 }

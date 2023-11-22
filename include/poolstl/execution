@@ -8,106 +8,121 @@
 #define POOLSTL_EXECUTION_HPP
 
 #include <memory>
+#include <mutex>
 #include <type_traits>
 
 #include "internal/task_thread_pool.hpp"
+#include "internal/utils.hpp"
+
+#if POOLSTL_HAVE_CXX17
+#include <variant>
+#endif
 
 namespace poolstl {
 
     namespace ttp = task_thread_pool;
 
     namespace execution {
-        /**
-         * A parallel policy with user-specified thread pool
-         */
-        struct par_pool {
-            static constexpr std::false_type use_default_pool() { return std::false_type{}; }
-            explicit par_pool(ttp::task_thread_pool &pool) : pool(pool) {}
-            ttp::task_thread_pool &pool;
-        };
+        namespace internal {
+            /**
+             * Holds the thread pool used by par.
+             */
+            inline std::shared_ptr<ttp::task_thread_pool> get_default_pool() {
+                static std::shared_ptr<ttp::task_thread_pool> pool;
+                static std::once_flag flag;
+                std::call_once(flag, [&](){ pool = std::make_shared<ttp::task_thread_pool>(); });
+                return pool;
+            }
+        }
 
         /**
          * A sequential policy that simply forwards to the non-policy overload.
          */
         struct sequenced_policy {};
-        struct parallel_policy {
-            // For internal use only
-            static constexpr std::true_type use_default_pool() { return std::true_type{}; }
 
-            par_pool on(ttp::task_thread_pool& pool) const {
-                return par_pool(pool);
+        /**
+         * A parallel policy that can use a user-specified thread pool or a default one.
+         */
+        struct parallel_policy {
+            parallel_policy() = default;
+            explicit parallel_policy(ttp::task_thread_pool& on_pool): on_pool(&on_pool) {}
+
+            parallel_policy on(ttp::task_thread_pool& pool) const {
+                return parallel_policy{pool};
             }
+
+            POOLSTL_NO_DISCARD ttp::task_thread_pool& pool() const {
+                if (on_pool) {
+                    return *on_pool;
+                } else {
+                    return *(internal::get_default_pool());
+                }
+            }
+
+        protected:
+            ttp::task_thread_pool *on_pool = nullptr;
         };
 
         constexpr sequenced_policy seq{};
         constexpr parallel_policy par{};
 
-        /**
-         * Like `par_if`, but with a user-specified pool.
-         * @tparam FwdSeq If sequential, will use `FwdSeq{}`.
-         */
-        template <typename FwdSeq = sequenced_policy>
-        struct par_if_pool {
-            explicit par_if_pool(bool call_par, ttp::task_thread_pool &pool): call_par(call_par), pool(pool) {}
-            bool call_par;
-            ttp::task_thread_pool &pool;
 
-            par_pool get_par() { return par_pool{pool}; }
-            FwdSeq get_seq() { return FwdSeq{}; }
+#if POOLSTL_HAVE_CXX17
+        /**
+         * A policy that allows selecting a policy at runtime.
+         *
+         * @tparam Variant std::variant<> of policy options.
+         */
+        template <typename Variant>
+        struct variant_policy {
+            explicit variant_policy(const Variant& policy): var(policy) {}
+            Variant var;
         };
 
+        namespace internal {
+            using poolstl_policy_variant = std::variant<
+                poolstl::execution::parallel_policy,
+                poolstl::execution::sequenced_policy>;
+        }
+
         /**
-         * Dynamically choose between parallel and sequential policies.
-         * @tparam FwdPar If parallel, will use `FwdPar{}`.
-         * @tparam FwdSeq If sequential, will use `FwdSeq{}`.
+         * Choose parallel or sequential at runtime.
+         *
+         * @param call_par Whether to use a parallel policy.
+         * @return `par` if call_par is true, else `seq`.
          */
-        template <typename FwdPar = parallel_policy, typename FwdSeq = sequenced_policy>
-        struct par_if {
-            explicit par_if(bool call_par): call_par(call_par) {}
-            bool call_par;
-
-            FwdPar get_par() { return FwdPar{}; }
-            FwdSeq get_seq() { return FwdSeq{}; }
-
-
-            par_if_pool<FwdSeq> on(ttp::task_thread_pool& pool) const {
-                return par_if_pool<FwdSeq>(call_par, pool);
+        inline variant_policy<internal::poolstl_policy_variant> par_if(bool call_par) {
+            if (call_par) {
+                return variant_policy(internal::poolstl_policy_variant(par));
+            } else {
+                return variant_policy(internal::poolstl_policy_variant(seq));
             }
-        };
+        }
+
+        /**
+         * Choose parallel or sequential at runtime, with pool selection.
+         *
+         * @param call_par Whether to use a parallel policy.
+         * @return `par.on(pool)` if call_par is true, else `seq`.
+         */
+        inline variant_policy<internal::poolstl_policy_variant> par_if(bool call_par, ttp::task_thread_pool& pool) {
+            if (call_par) {
+                return variant_policy(internal::poolstl_policy_variant(par.on(pool)));
+            } else {
+                return variant_policy(internal::poolstl_policy_variant(seq));
+            }
+        }
+#endif
     }
 
     using execution::seq;
     using execution::par;
-    using execution::par_pool;
+#if POOLSTL_HAVE_CXX17
+    using execution::variant_policy;
     using execution::par_if;
-    using execution::par_if_pool;
-
-//#if defined(__cpp_lib_parallel_algorithm)
-//    using std_par_if = poolstl::par_if<std::execution::parallel_policy, std::execution::sequenced_policy>;
-//#else
-//    using std_par_if = execution::par_if<>;
-//#endif
-
+#endif
 
     namespace internal {
-        /**
-         * Holds the thread pool used by par.
-         */
-        inline std::shared_ptr<ttp::task_thread_pool> get_default_pool() {
-            static std::shared_ptr<ttp::task_thread_pool> pool = std::make_shared<ttp::task_thread_pool>();
-            return pool;
-        }
-
-        template <typename ExecPolicy>
-        ttp::task_thread_pool& pool(ExecPolicy&) {
-            return *get_default_pool();
-        }
-
-        template <>
-        inline ttp::task_thread_pool& pool<par_pool>(par_pool& policy) {
-            return policy.pool;
-        }
-
         /**
          * To enable/disable seq overload resolution
          */
@@ -119,39 +134,33 @@ namespace poolstl {
                 Tp>::type;
 
         /**
-         * Helper for enable_if_par
-         */
-        template <typename T> struct is_poolstl_execution_policy : std::false_type {};
-        template <> struct is_poolstl_execution_policy<::poolstl::execution::parallel_policy> : std::true_type {};
-        template <> struct is_poolstl_execution_policy<::poolstl::execution::par_pool> : std::true_type {};
-
-        /**
-         * To enable/disable par and par_pool overload resolution
+         * To enable/disable par overload resolution
          */
         template <class ExecPolicy, class Tp>
         using enable_if_par =
             typename std::enable_if<
-                is_poolstl_execution_policy<
+                std::is_same<poolstl::execution::parallel_policy,
                     typename std::remove_cv<typename std::remove_reference<ExecPolicy>::type>::type>::value,
                 Tp>::type;
 
-
+#if POOLSTL_HAVE_CXX17
         /**
-         * Helper for enable_if_par_if
+         * Helper for enable_if_poolstl_variant
          */
-        template <typename T> struct is_poolstl_par_if : std::false_type {};
-        template <typename P, typename S> struct is_poolstl_par_if<::poolstl::execution::par_if<P, S>> : std::true_type {};
-        template <typename S> struct is_poolstl_par_if<::poolstl::execution::par_if_pool<S>> : std::true_type {};
+        template <typename T> struct is_poolstl_variant_policy : std::false_type {};
+        template <typename V> struct is_poolstl_variant_policy<
+            ::poolstl::execution::variant_policy<V>> :std::true_type {};
 
         /**
-         * To enable/disable par_if and par_if_pool overload resolution
+         * To enable/disable variant_policy (for par_if) overload resolution
          */
         template <class ExecPolicy, class Tp>
-        using enable_if_par_if =
+        using enable_if_poolstl_variant =
             typename std::enable_if<
-                is_poolstl_par_if<
+                is_poolstl_variant_policy<
                     typename std::remove_cv<typename std::remove_reference<ExecPolicy>::type>::type>::value,
                 Tp>::type;
+#endif
     }
 }
 

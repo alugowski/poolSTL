@@ -15,8 +15,15 @@
 #include <functional>
 #include <iterator>
 
-#if (__cplusplus >= 201703L || (defined(_MSVC_LANG) && _MSVC_LANG >= 201703L)) \
-    && (!defined(_GLIBCXX_RELEASE) || _GLIBCXX_RELEASE >= 9)
+#if __cplusplus >= 201703L || (defined(_MSVC_LANG) && _MSVC_LANG >= 201703L)
+#define POOLSTL_HAVE_CXX17 1
+#define POOLSTL_NO_DISCARD [[nodiscard]]
+#else
+#define POOLSTL_HAVE_CXX17 0
+#define POOLSTL_NO_DISCARD
+#endif
+
+#if POOLSTL_HAVE_CXX17 && (!defined(_GLIBCXX_RELEASE) || _GLIBCXX_RELEASE >= 9)
 #define POOLSTL_HAVE_CXX17_LIB 1
 #else
 #define POOLSTL_HAVE_CXX17_LIB 0

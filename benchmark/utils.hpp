@@ -49,12 +49,6 @@ template <> struct policy<poolstl_par> {
         return poolstl::execution::par;
     };
 };
-template <> struct policy<poolstl::execution::par_pool> {
-    static poolstl::execution::par_pool get() {
-        static task_thread_pool::task_thread_pool pool;
-        return poolstl::execution::par_pool(pool);
-    };
-};
 #ifdef POOLSTL_BENCH_STD_PAR
 template <> struct policy<std_par> {
     constexpr static const std::execution::parallel_policy& get() {
@@ -71,7 +65,7 @@ std::vector<T> iota_vector(size_t size, T init=0) {
 }
 
 template <typename T=int>
-std::vector<T> random_vector(size_t size, T init=0) {
+std::vector<T> random_vector(size_t size) {
     std::vector<T> ret = iota_vector<T>(size, T{});
 
     std::mt19937 g(1);

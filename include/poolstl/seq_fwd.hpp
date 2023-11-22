@@ -25,31 +25,30 @@
         std::FNAME(std::forward<ARGS>(args)...);                                 \
     }
 
+#if POOLSTL_HAVE_CXX17
+
 /*
- * Dynamically choose between parallel and sequential policy
+ * Dynamically choose policy from a std::variant.
+ * Useful to choose between parallel and sequential policies at runtime via par_if.
  */
 
-#define POOLSTL_DEFINE_PAR_IF_FWD_VOID(FNAME)                                              \
-    template<class EP, typename...ARGS>                                                    \
-    poolstl::internal::enable_if_par_if<EP, void> FNAME(EP&& policy, ARGS&&...args) {      \
-        if (policy.call_par) {                                                             \
-            std::FNAME(policy.get_par(), std::forward<ARGS>(args)...);                     \
-        } else {                                                                           \
-            std::FNAME(policy.get_seq(), std::forward<ARGS>(args)...);                     \
-        }                                                                                  \
+#define POOLSTL_DEFINE_PAR_IF_FWD_VOID(FNAME)                                                             \
+    template<class EP, typename...ARGS>                                                                   \
+    poolstl::internal::enable_if_poolstl_variant<EP, void> FNAME(EP&& policy, ARGS&&...args) {            \
+        std::visit([&](auto&& pol) { std::FNAME(pol, std::forward<ARGS>(args)...); }, policy.var);        \
     }
 
-#define POOLSTL_DEFINE_PAR_IF_FWD(FNAME)                                                                       \
-    template<class EP, typename...ARGS>                                                                        \
-    auto FNAME(EP&& policy, ARGS&&...args) ->                                                                  \
-                poolstl::internal::enable_if_par_if<EP, decltype(std::FNAME(std::forward<ARGS>(args)...))> {   \
-        if (policy.call_par) {                                                                                 \
-            return std::FNAME(policy.get_par(), std::forward<ARGS>(args)...);                                  \
-        } else {                                                                                               \
-            return std::FNAME(policy.get_seq(), std::forward<ARGS>(args)...);                                  \
-        }                                                                                                      \
+#define POOLSTL_DEFINE_PAR_IF_FWD(FNAME)                                                                              \
+    template<class EP, typename...ARGS>                                                                               \
+    auto FNAME(EP&& policy, ARGS&&...args) ->                                                                         \
+                poolstl::internal::enable_if_poolstl_variant<EP, decltype(std::FNAME(std::forward<ARGS>(args)...))> { \
+        return std::visit([&](auto&& pol) { return std::FNAME(pol, std::forward<ARGS>(args)...); }, policy.var);      \
     }
 
+#else
+#define POOLSTL_DEFINE_PAR_IF_FWD_VOID(FNAME)
+#define POOLSTL_DEFINE_PAR_IF_FWD(FNAME)
+#endif
 /*
  * Define both the sequential forward and dynamic chooser.
  */

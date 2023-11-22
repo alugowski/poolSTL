@@ -9,7 +9,7 @@
 bool static_init() {
     benchmark::SetDefaultTimeUnit(benchmark::kMillisecond);
     // init the poolSTL thread pool
-    poolstl::internal::get_default_pool();
+    poolstl::execution::internal::get_default_pool();
     return true;
 }
 static bool initialized = static_init();

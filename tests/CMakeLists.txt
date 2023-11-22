@@ -65,5 +65,6 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STR
         target_link_libraries(supplement_test PUBLIC TBB::tbb)
     else()
         message("No TBB")
+        target_compile_definitions(supplement_test PUBLIC POOLSTL_MISSING_NEEDED_TBB)
     endif()
 endif()

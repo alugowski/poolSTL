@@ -86,6 +86,7 @@ namespace std {
     POOLSTL_DEFINE_BOTH_SEQ_FWD_AND_PAR_IF(transform)
 
 #if POOLSTL_HAVE_CXX17_LIB
+    POOLSTL_DEFINE_BOTH_SEQ_FWD_AND_PAR_IF(exclusive_scan)
     POOLSTL_DEFINE_BOTH_SEQ_FWD_AND_PAR_IF(reduce)
     POOLSTL_DEFINE_BOTH_SEQ_FWD_AND_PAR_IF(transform_reduce)
 #endif

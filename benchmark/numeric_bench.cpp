@@ -17,6 +17,30 @@
 ////////////////////////////////
 
 template <class ExecPolicy>
+void exclusive_scan(benchmark::State& state) {
+    auto values = iota_vector(arr_length);
+    std::vector<int> dest(arr_length);
+
+    for ([[maybe_unused]] auto _ : state) {
+        if constexpr (is_policy<ExecPolicy>::value) {
+            std::exclusive_scan(policy<ExecPolicy>::get(), values.begin(), values.end(), dest.begin(), 0);
+        } else {
+            std::exclusive_scan(values.begin(), values.end(), dest.begin(), 0);
+        }
+        benchmark::DoNotOptimize(dest);
+        benchmark::ClobberMemory();
+    }
+}
+
+BENCHMARK(exclusive_scan<seq>)->Name("exclusive_scan()")->UseRealTime();
+BENCHMARK(exclusive_scan<poolstl_par>)->Name("exclusive_scan(poolstl::par)")->UseRealTime();
+#ifdef POOLSTL_BENCH_STD_PAR
+BENCHMARK(exclusive_scan<std_par>)->Name("exclusive_scan(std::execution::par)")->UseRealTime();
+#endif
+
+////////////////////////////////
+
+template <class ExecPolicy>
 void reduce(benchmark::State& state) {
     auto values = iota_vector(arr_length);
 

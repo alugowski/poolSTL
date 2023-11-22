@@ -350,6 +350,32 @@ TEST_CASE("transform_2", "[alg][algorithm]") {
     }
 }
 
+#if POOLSTL_HAVE_CXX17_LIB
+TEST_CASE("exclusive_scan", "[alg][algorithm]") {
+    for (auto num_threads : test_thread_counts) {
+        ttp::task_thread_pool pool(num_threads);
+
+        for (auto num_iters : test_arr_sizes) {
+            for (int init : {0, 10}) {
+                auto v = iota_vector(num_iters);
+                std::vector<int> dest1(v.size());
+                std::vector<int> dest2(v.size());
+
+                auto seq_res = std::exclusive_scan(poolstl::par_if(false), v.cbegin(), v.cend(), dest1.begin(), init);
+                auto par_res = std::exclusive_scan(poolstl::par.on(pool),  v.cbegin(), v.cend(), dest2.begin(), init);
+                // test return value
+                REQUIRE((par_res - dest2.begin()) == (seq_res - dest1.begin()));
+                REQUIRE(dest1 == dest2);
+
+                // test in-place
+                std::exclusive_scan(poolstl::par.on(pool), v.begin(), v.end(), v.begin(), init);
+                REQUIRE(v == dest2);
+            }
+        }
+    }
+}
+#endif
+
 TEST_CASE("reduce", "[alg][numeric]") {
     for (auto num_threads : test_thread_counts) {
         ttp::task_thread_pool pool(num_threads);

@@ -10,7 +10,6 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <poolstl/poolstl.hpp>
-#include <poolstl/iota_iter.hpp>
 
 #include "utils.hpp"
 

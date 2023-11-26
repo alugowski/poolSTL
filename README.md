@@ -5,50 +5,65 @@
 
 Light, self-contained, thread pool-based implementation of [C++17 parallel standard library algorithms](https://en.cppreference.com/w/cpp/algorithm).
 
-C++17 introduced parallel versions of many algorithms in the standard library.
-These parallel versions accept an *Execution Policy* as their first argument.
-Different policies allow the implementation to parallelize the algorithm in a different way,
-such as using threads, vectorization, or even GPU.
+C++17 introduced parallel overloads of standard library algorithms that accept an [*Execution Policy*](https://en.cppreference.com/w/cpp/algorithm/execution_policy_tag) as the first argument.
+Policies specify limits on how the implementation may parallelize the algorithm, enabling methods like threads, vectorization, or even GPU.
 Policies can be supplied by the compiler or by libraries like this one.
 
-Unfortunately compiler support for the [standard policies](https://en.cppreference.com/w/cpp/algorithm/execution_policy_tag) varies.
-PoolSTL is a *supplement* to fill in the support gaps, so we can use parallel algorithms now.
-It is not meant as a full implementation; only the basics are expected to be covered.  Use this if:
-* you only need the basics, including no nested parallel calls.
-* you must use a [compiler lacking native support](https://en.cppreference.com/w/cpp/compiler_support/17) (see "Parallel algorithms and execution policies").
-* you cannot link against TBB for whatever reason.
-* the [Parallel STL](https://www.intel.com/content/www/us/en/developer/articles/guide/get-started-with-parallel-stl.html) is too heavy.
+```c++
+std::sort(std::execution::par, vec.begin(), vec.end());
+    //    ^^^^^^^^^^^^^^^^^^^ native C++17 parallel Execution Policy      
+```
+
+Unfortunately compiler support [varies](https://en.cppreference.com/w/cpp/compiler_support/17):
+
+|              |    Linux     |    macOS     |   Windows    |
+|:-------------|:------------:|:------------:|:------------:|
+| GCC 8-       |      ❌      |     ❌       |      ❌      |
+| GCC 9+       | TBB Required | TBB Required | TBB Required |
+| Clang        | TBB Required | TBB Required | TBB Required |
+| Apple Clang  |              |      ❌      |              |
+| MSVC         |              |              |      ✅      |
+| [Parallel STL](https://www.intel.com/content/www/us/en/developer/articles/guide/get-started-with-parallel-stl.html) | TBB Required | TBB Required | TBB Required |
+| **poolSTL**  |      ✅      |      ✅      |      ✅      |
+
+PoolSTL is a *supplement* to fill in the support gaps. It is small, easy to integrate, and has no external dependencies.
+Note that poolSTL is not a full implementation; only the basics are covered.
+
+Use poolSTL exclusively, or only on platforms lacking native support,
+or only if [TBB](https://www.intel.com/content/www/us/en/developer/tools/oneapi/onetbb.html) is not present.
 
 Supports C++11 and higher, C++17 preferred.
 Tested in CI on GCC 7+, Clang/LLVM 5+, Apple Clang, MSVC.
 
 ## Implemented Algorithms
-Algorithms are added on an as-needed basis. If you need one [open an issue](https://github.com/alugowski/poolSTL/issues) or contribute a PR.
+Algorithms are added on an as-needed basis. If you need one [open an issue](https://github.com/alugowski/poolSTL/issues) or contribute a PR.  
+**Limitations:** All iterators must be random access. No nested parallel calls.
 
 ### `<algorithm>`
-* [all_of](https://en.cppreference.com/w/cpp/algorithm/all_of), [any_of](https://en.cppreference.com/w/cpp/algorithm/any_of), [none_of](https://en.cppreference.com/w/cpp/algorithm/none_of)
-* [copy](https://en.cppreference.com/w/cpp/algorithm/copy), [copy_n](https://en.cppreference.com/w/cpp/algorithm/copy_n)
-* [count](https://en.cppreference.com/w/cpp/algorithm/count), [count_if](https://en.cppreference.com/w/cpp/algorithm/count_if)
-* [fill](https://en.cppreference.com/w/cpp/algorithm/fill), [fill_n](https://en.cppreference.com/w/cpp/algorithm/fill_n)
-* [find](https://en.cppreference.com/w/cpp/algorithm/find), [find_if](https://en.cppreference.com/w/cpp/algorithm/find_if), [find_if_not](https://en.cppreference.com/w/cpp/algorithm/find_if_not)
-* [for_each](https://en.cppreference.com/w/cpp/algorithm/for_each), [for_each_n](https://en.cppreference.com/w/cpp/algorithm/for_each_n)
-* [sort](https://en.cppreference.com/w/cpp/algorithm/sort), [stable_sort](https://en.cppreference.com/w/cpp/algorithm/stable_sort)
-* [transform](https://en.cppreference.com/w/cpp/algorithm/transform)
+* [`all_of`](https://en.cppreference.com/w/cpp/algorithm/all_of), [`any_of`](https://en.cppreference.com/w/cpp/algorithm/any_of), [`none_of`](https://en.cppreference.com/w/cpp/algorithm/none_of)
+* [`copy`](https://en.cppreference.com/w/cpp/algorithm/copy), [`copy_n`](https://en.cppreference.com/w/cpp/algorithm/copy_n)
+* [`count`](https://en.cppreference.com/w/cpp/algorithm/count), [`count_if`](https://en.cppreference.com/w/cpp/algorithm/count_if)
+* [`fill`](https://en.cppreference.com/w/cpp/algorithm/fill), [`fill_n`](https://en.cppreference.com/w/cpp/algorithm/fill_n)
+* [`find`](https://en.cppreference.com/w/cpp/algorithm/find), [`find_if`](https://en.cppreference.com/w/cpp/algorithm/find_if), [`find_if_not`](https://en.cppreference.com/w/cpp/algorithm/find_if_not)
+* [`for_each`](https://en.cppreference.com/w/cpp/algorithm/for_each), [`for_each_n`](https://en.cppreference.com/w/cpp/algorithm/for_each_n)
+* [`sort`](https://en.cppreference.com/w/cpp/algorithm/sort), [`stable_sort`](https://en.cppreference.com/w/cpp/algorithm/stable_sort)
+* [`transform`](https://en.cppreference.com/w/cpp/algorithm/transform)
 
 ### `<numeric>`
-* [exclusive_scan](https://en.cppreference.com/w/cpp/algorithm/exclusive_scan) (C++17 only)
-* [reduce](https://en.cppreference.com/w/cpp/algorithm/reduce)
-* [transform_reduce](https://en.cppreference.com/w/cpp/algorithm/transform_reduce) (C++17 only)
+* [`exclusive_scan`](https://en.cppreference.com/w/cpp/algorithm/exclusive_scan) (C++17 only)
+* [`reduce`](https://en.cppreference.com/w/cpp/algorithm/reduce)
+* [`transform_reduce`](https://en.cppreference.com/w/cpp/algorithm/transform_reduce) (C++17 only)
 
 All in `std::` namespace.
 
-**Note:** All iterators must be random access.
+### Other
+* [`poolstl::iota_iter`](include/poolstl/iota_iter.hpp) - Iterate over integers. Same as iterating over output of [`std::iota`](https://en.cppreference.com/w/cpp/algorithm/iota) but without materializing anything. Iterator version of [`std::ranges::iota_view`](https://en.cppreference.com/w/cpp/ranges/iota_view).
 
 ## Usage
 
-PoolSTL provides these execution policies:
+PoolSTL provides:
 * `poolstl::par`: Substitute for [`std::execution::par`](https://en.cppreference.com/w/cpp/algorithm/execution_policy_tag). Parallelized using a [thread pool](https://github.com/alugowski/task-thread-pool).
-* `poolstl::seq`: Substitute for `std::execution::seq`. Simply calls the sequential (non-policy) overload.
+* `poolstl::seq`: Substitute for `std::execution::seq`. Simply calls the regular (non-policy) overload.
 * `poolstl::par_if()`: (C++17 only) choose parallel or sequential at runtime. See below.
 
 In short, use `poolstl::par` to make your code parallel. Complete example:
@@ -58,7 +73,7 @@ In short, use `poolstl::par` to make your code parallel. Complete example:
 
 int main() {
     std::vector<int> v = {0, 1, 2, 3, 4, 5};
-    auto sum = std::reduce(poolstl::par, v.cbegin(), v.cend());
+    auto sum = std::reduce(poolstl::par, vec.cbegin(), vec.cend());
     //                     ^^^^^^^^^^^^
     //                     Add this to make your code parallel.
     std::cout << "Sum=" << sum << std::endl;
@@ -68,15 +83,14 @@ int main() {
 
 ### Controlling Thread Pool Size with `par.on(pool)`
 
-The thread pool used by `poolstl::par` is managed internally by poolSTL. It is started on first use.
-
+The thread pool used by `poolstl::par` is managed internally by poolSTL. It is started on first use.  
 Use your own [thread pool](https://github.com/alugowski/task-thread-pool)
 with `poolstl::par.on(pool)` for control over thread count, startup/shutdown, etc.:
 
 ```c++
 task_thread_pool::task_thread_pool pool{4};  // 4 threads
 
-std::reduce(poolstl::par.on(pool), v.cbegin(), v.cbegin());
+std::reduce(poolstl::par.on(pool), vec.begin(), vec.end());
 ```
 
 ### Choosing Parallel or Sequential at Runtime with `par_if`
@@ -86,42 +100,32 @@ the cost of starting threads, while large datasets do and should be parallelized
 
 Use `poolstl::par_if` to select between `par` and `seq` at runtime:
 ```c++
-bool is_parallel = true;
+bool is_parallel = vec.size() > 10000;
 
-std::reduce(poolstl::par_if(is_parallel), v.cbegin(), v.cbegin());
+std::reduce(poolstl::par_if(is_parallel), vec.begin(), vec.end());
 ```
 
 Use `poolstl::par_if(is_parallel, pool)` to control the thread pool used by `par`, if selected.
 
 # Examples
 
-## Parallelize a `for-each` loop
+### Parallel `for (auto& value : vec)`
 
 ```c++
-std::vector<int> v = {0, 1, 2, 3, 4, 5};
+std::vector<int> vec = {0, 1, 2, 3, 4, 5};
 
-// Sequential
-for (auto& value : v) {
-    std::cout << value;  // loop body
-}
-
-// Parallel
-std::for_each(poolstl::par, v.begin(), v.end(), [](auto& value) {
+// Parallel for-each
+std::for_each(poolstl::par, vec.begin(), vec.end(), [](auto& value) {
     std::cout << value;  // loop body
 });
 ```
 
-## Parallelize a `for` loop (counter)
+### Parallel `for (int i = 0; i < 100; ++i)`
 
 ```c++
-// Sequential
-for (int i = 0; i < 100 : ++i) {
-    std::cout << i;  // loop body
-}
-
-// Parallel
 using poolstl::iota_iter;
 
+// parallel for loop
 std::for_each(poolstl::par, iota_iter<int>(0), iota_iter<int>(100), [](auto i) {
     std::cout << i;  // loop body
 });
@@ -129,21 +133,20 @@ std::for_each(poolstl::par, iota_iter<int>(0), iota_iter<int>(100), [](auto i) {
 
 
 
-## Parallel Sort
+### Parallel Sort
 
 ```c++
-std::vector<int> v = {5, 2, 1, 3, 0, 4};
-std::sort(poolstl::par, v.begin(), v.end();
-// `v` is now {0, 1, 2, 3, 4, 5}
+std::vector<int> vec = {5, 2, 1, 3, 0, 4};
+
+std::sort(poolstl::par, vec.begin(), vec.end());
 ```
 
 ## Installation
 
 ### Single File
 
-Copy a single-file amalgamated `poolstl.hpp` from the [latest release](https://github.com/alugowski/poolSTL/releases) and into your project.
-
-Note: Some compilers, including non-Apple Clang and GCC 8 and older, require the `-lpthread` linker flag to use C++11 threads.
+Each [release](https://github.com/alugowski/poolSTL/releases/latest) publishes a single-file amalgamated `poolstl.hpp`. Simply copy this into your project.  
+**Note:** Some compilers (non-Apple Clang, GCC 8 and older) require `-lpthread` to use C++11 threads.
 
 ### CMake
 
@@ -205,7 +208,7 @@ reduce(std::execution::par)/real_time                              3.38 ms      
 ```
 
 # poolSTL as `std::execution::par`
-**USE AT YOUR OWN RISK!**
+**USE AT YOUR OWN RISK! THIS IS A HACK!**
 
 Two-line hack for missing compiler support. A no-op on compilers with support.
 

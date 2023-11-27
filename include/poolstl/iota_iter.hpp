@@ -37,7 +37,7 @@ namespace poolstl {
         using value_type = T;
         using difference_type = std::ptrdiff_t;
         using pointer = T *;
-        using reference = T &;
+        using reference = T;
         using iterator_category = std::random_access_iterator_tag;
 
         iota_iter() : value{} {}
@@ -47,8 +47,8 @@ namespace poolstl {
         iota_iter<T> &operator=(T rhs) { value = rhs; return *this; }
         iota_iter<T> &operator=(const iota_iter &rhs) { value = rhs.value; return *this; }
 
-        T operator*() const { return value; }
-        T operator[](difference_type rhs) const { return value + rhs; }
+        reference operator*() const { return value; }
+        reference operator[](difference_type rhs) const { return value + rhs; }
         // operator-> has no meaning in this application
 
         bool operator==(const iota_iter<T> &rhs) const { return value == rhs.value; }

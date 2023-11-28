@@ -108,7 +108,7 @@ jobs:
         shell: bash
 
       - name: Upload Coverage to Codecov
-        if: contains(matrix.os, 'ubuntu')
+        if: contains(matrix.os, 'ubuntu') || contains(matrix.os, 'macos')
         uses: codecov/codecov-action@v3
         with:
           gcov: true

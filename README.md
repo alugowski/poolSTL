@@ -14,17 +14,18 @@ std::sort(std::execution::par, vec.begin(), vec.end());
     //    ^^^^^^^^^^^^^^^^^^^ native C++17 parallel Execution Policy      
 ```
 
-Unfortunately compiler support [varies](https://en.cppreference.com/w/cpp/compiler_support/17):
+Unfortunately compiler support [varies](https://en.cppreference.com/w/cpp/compiler_support/17). Quick summary of compilers' default standard libraries:
 
-|              |    Linux     |    macOS     |   Windows    |
-|:-------------|:------------:|:------------:|:------------:|
-| GCC 8-       |      ❌      |     ❌       |      ❌      |
-| GCC 9+       | TBB Required | TBB Required | TBB Required |
-| Clang        | TBB Required | TBB Required | TBB Required |
-| Apple Clang  |              |      ❌      |              |
-| MSVC         |              |              |      ✅      |
+|                   |    Linux     |    macOS     |   Windows    |
+|:------------------|:------------:|:------------:|:------------:|
+| GCC 8-            |      ❌      |      ❌      |      ❌      |
+| GCC 9+            | TBB Required | TBB Required | TBB Required |
+| Clang (libstdc++) | TBB Required | TBB Required | TBB Required |
+| Clang (libc++)    |      ❌      |      ❌      |      ❌      |
+| Apple Clang       |              |      ❌      |              |
+| MSVC 15.7+ (2017) |              |              |      ✅      |
 | [Parallel STL](https://www.intel.com/content/www/us/en/developer/articles/guide/get-started-with-parallel-stl.html) | TBB Required | TBB Required | TBB Required |
-| **poolSTL**  |      ✅      |      ✅      |      ✅      |
+| **poolSTL**       |      ✅      |      ✅      |      ✅      |
 
 PoolSTL is a *supplement* to fill in the support gaps. It is small, easy to integrate, and has no external dependencies.
 Note that poolSTL is not a full implementation; only the basics are covered.

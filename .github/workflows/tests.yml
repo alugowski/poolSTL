@@ -17,6 +17,12 @@ jobs:
             description: "LLVM 5"
             llvm-version: "5"
 
+          - os: ubuntu-22.04
+            # select libc++ as libstdc++ appears to be the default
+            description: "LLVM 16 libc++"
+            llvm-version: "16"
+            cmake-flags: '-DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi"'
+
           - os: ubuntu-20.04
             description: "GCC 7"
             gcc-version: "7"

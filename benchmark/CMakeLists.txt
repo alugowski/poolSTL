@@ -6,6 +6,12 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STR
     set(CMAKE_CXX_FLAGS_RELEASE "-g -O3 -DNDEBUG")
 endif ()
 
+if (MINGW AND WIN32)
+    # MinGW on GitHub Actions requires these.
+    # If omitted the executable crashes with 'Exit code 0xc0000139' which appears to mean a missing DLL.
+    add_link_options("-static-libstdc++" "-static-libgcc")
+endif()
+
 include(FetchContent)
 
 # Add Google Benchmark
@@ -33,7 +39,7 @@ add_executable(poolstl_bench
 target_link_libraries(poolstl_bench benchmark::benchmark poolSTL::poolSTL)
 target_compile_features(poolstl_bench PUBLIC cxx_std_17)
 
-if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" OR ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND NOT MINGW))
     # GCC and Clang require TBB for native std::execution::par
     find_package(TBB)
     if (TBB_FOUND)
@@ -42,10 +48,9 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STR
         target_compile_definitions(poolstl_bench PUBLIC POOLSTL_BENCH_STD_PAR)
     else()
         message("No TBB")
-        # No TBB means cannot use std::execution::par
-        unset(HAVE_STD_EXECUTION_PAR)
     endif()
 else()
-    # MSVC requires nothing
+    # MSVC requires nothing.
+    # MinGW also requires nothing to compile std::execution::par, but performance appears to be the same as sequential.
     target_compile_definitions(poolstl_bench PUBLIC POOLSTL_BENCH_STD_PAR)
 endif()

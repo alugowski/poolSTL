@@ -2,9 +2,25 @@
 cmake_minimum_required(VERSION 3.11...3.26)
 enable_testing()
 
-# Be pedantic for clean code
-if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall -Wextra -pedantic")
+if (WIN32)
+    # Need bigobj because some tests use lots of templates
+    if (MSVC)
+        add_compile_options("/bigobj")
+    elseif(MINGW)
+        # Also add -Os to reduce maximum filesize
+        add_compile_options("-Wa,-mbig-obj" "-Os")
+    endif()
+else()
+    # Be pedantic for clean code
+    if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+        add_compile_options("-g" "-Wall" "-Wextra" "-pedantic")
+    endif()
+endif()
+
+if (MINGW AND WIN32)
+    # The MinGW on GitHub Actions requires these.
+    # If omitted some executables crash with 'Exit code 0xc0000139' which appears to mean a missing DLL.
+    add_link_options("-static-libstdc++" "-static-libgcc")
 endif()
 
 # Code Coverage
@@ -55,19 +71,26 @@ add_executable(cpp11_test cpp11_test.cpp)
 target_link_libraries(cpp11_test PUBLIC poolSTL::poolSTL)
 target_compile_features(cpp11_test PUBLIC cxx_std_11)
 
-# Test std::execution supplementation
-# This uses only std::execution::par. On compilers with support this should result in a poolSTL no-op,
-# and on ones without support it should use fallback to poolstl::par.
+# Test std::execution supplementation.
+# The test code uses only std::execution::par, seq, and par_unseq.
+# On compilers with support poolSTL does nothing, else poolSTL creates a fallback using poolstl::par.
 add_executable(supplement_test supplement_test.cpp)
 target_link_libraries(supplement_test PUBLIC poolSTL::poolSTL)
 target_compile_features(supplement_test PUBLIC cxx_std_17)
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    # GCC and Clang require TBB for std::execution::par
+    # GCC and Clang require TBB for std::execution::par.
+    # MinGW will compile std::execution::par without TBB, but performance is sequential.
     find_package(TBB)
     if (TBB_FOUND)
         target_link_libraries(supplement_test PUBLIC TBB::tbb)
     else()
         message("No TBB")
-        target_compile_definitions(supplement_test PUBLIC POOLSTL_MISSING_NEEDED_TBB)
+        # Prevent including <execution>, as doing that requires linking against TBB on newer GCC/Clang.
+        target_compile_definitions(supplement_test PUBLIC POOLSTL_STD_SUPPLEMENT_NO_INCLUDE)
+        if (MINGW)
+            # extra hack!
+            # MinGW declares support, so must override poolSTL's auto-detection to enable the supplement.
+            target_compile_definitions(supplement_test PUBLIC POOLSTL_STD_SUPPLEMENT_FORCE)
+        endif()
     endif()
 endif()

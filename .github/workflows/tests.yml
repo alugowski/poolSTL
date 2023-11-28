@@ -41,6 +41,11 @@ jobs:
           - os: windows-latest
             # uses MSVC
 
+          - os: windows-latest
+            mingw-version: "13.2.0"
+            description: "MinGW 13"
+            cmake-flags: '-G "MinGW Makefiles"'
+
     steps:
       - uses: actions/checkout@v4
 
@@ -58,6 +63,12 @@ jobs:
         with:
           version: ${{ matrix.gcc-version }}
 
+      - name: Setup MinGW
+        if: contains(matrix.os, 'windows') && matrix.mingw-version != ''
+        run: |
+          choco install --no-progress mingw --version ${{ matrix.mingw-version }}
+          Add-Content $env:GITHUB_PATH "C:\ProgramData\mingw64\mingw64\bin"
+
       - name: Setup LLVM and Clang
         uses: KyleMayes/install-llvm-action@v1
         if: ${{ matrix.llvm-version != '' }}
@@ -73,7 +84,7 @@ jobs:
 
       - name: Build and Test
         run: |
-          cmake -S . -B build/ -DCMAKE_BUILD_TYPE=Debug -DPOOLSTL_TEST=ON -DPOOLSTL_TEST_COVERAGE=ON
+          cmake -S . -B build/ -DCMAKE_BUILD_TYPE=Debug -DPOOLSTL_TEST=ON -DPOOLSTL_TEST_COVERAGE=ON ${{ matrix.cmake-flags }}
           cmake --build build/ --config Debug
           cd build/tests
           ctest -C Debug --output-on-failure --verbose
@@ -85,7 +96,7 @@ jobs:
         # Earliest GCC with all benchmarked methods is 9
         if: matrix.gcc-version != '7' && matrix.gcc-version != '8'
         run: |
-          cmake -S . -B bench_build/ -DCMAKE_BUILD_TYPE=Release -DPOOLSTL_BENCH=ON
+          cmake -S . -B bench_build/ -DCMAKE_BUILD_TYPE=Release -DPOOLSTL_BENCH=ON ${{ matrix.cmake-flags }}
           cmake --build bench_build/ --config Release
           cd bench_build/benchmark/
           ./poolstl_bench || ./Release/poolstl_bench.exe
@@ -101,7 +112,7 @@ jobs:
           cp tools/poolstl.hpp include/poolstl/
           mkdir -p include/poolstl/internal
           cp tools/poolstl.hpp include/poolstl/internal/utils.hpp
-          cmake -S . -B build/ -DCMAKE_BUILD_TYPE=Debug -DPOOLSTL_TEST=ON -DPOOLSTL_TEST_COVERAGE=OFF
+          cmake -S . -B build/ -DCMAKE_BUILD_TYPE=Debug -DPOOLSTL_TEST=ON -DPOOLSTL_TEST_COVERAGE=OFF ${{ matrix.cmake-flags }}
           cmake --build build/ --config Debug
           cd build/tests
           ctest -C Debug --output-on-failure --verbose

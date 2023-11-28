@@ -222,5 +222,12 @@ If not found then poolSTL will alias its `poolstl::par` as `std::execution::par`
 
 Now just use `std::execution::par` as normal, and poolSTL will fill in as necessary. See [supplement_test.cpp](tests/supplement_test.cpp).
 
-Example use case: You *can* link against TBB, so you'll use native support on GCC 9+, Clang, MSVC, etc.
+**Example use case:** You *can* link against TBB, so you'll use native support on GCC 9+, Clang, MSVC, etc.
 PoolSTL will fill in automatically on GCC <9 and Apple Clang.
+
+**Example use case 2:** You'd *prefer* to use the TBB version, but don't want to fail on systems that don't have it.
+Simply use the supplement as above, but have your build system (CMake, meson, etc.) check for TBB.
+If not found define `POOLSTL_STD_SUPPLEMENT_NO_INCLUDE`.  
+
+If defined, the supplement will not `#include <execution>` (and neither should your code!),
+thus dropping the TBB link requirement. The poolSTL supplement fills in. See the supplement section of [tests/CMakeLists.txt](tests/CMakeLists.txt) for an example.

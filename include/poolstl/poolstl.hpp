@@ -27,8 +27,21 @@
  *
  * To use this define POOLSTL_STD_SUPPLEMENT=1 before including poolstl.hpp.
  *
- * This aliasing will not happen if native support exists. If this autodetection fails for you,
- * define POOLSTL_ALLOW_SUPPLEMENT=0 to disable this feature.
+ * Attempts to autodetect native support by checking for <execution>, including it if it exists, and then checking for
+ * the __cpp_lib_parallel_algorithm feature macro.
+ *
+ * If native support is not found then the standard execution policies are declared as forwards to poolSTL.
+ *
+ * GCC and Clang: TBB is required if <execution> is #included. If you'd like to use the poolSTL supplement in cases
+ * that TBB is not available, have your build system define POOLSTL_STD_SUPPLEMENT_NO_INCLUDE if TBB is not found.
+ * PoolSTL will then not include <execution> and the supplement will kick in.
+ * Your code must not #include <execution>.
+ *
+ * MinGW: the compiler declares support, but actual performance is sequential (see poolSTL benchmark). To use
+ * the supplement anyway define POOLSTL_STD_SUPPLEMENT_FORCE to override the autodetection.
+ * Your code must not #include <execution>.
+ *
+ * Define POOLSTL_ALLOW_SUPPLEMENT=0 to override POOLSTL_STD_SUPPLEMENT and disable this feature.
  */
 #ifndef POOLSTL_ALLOW_SUPPLEMENT
 #define POOLSTL_ALLOW_SUPPLEMENT 1
@@ -38,11 +51,13 @@
 
 #if __cplusplus >= 201603L || (defined(_MSVC_LANG) && _MSVC_LANG >= 201603L)
 #if __has_include(<execution>)
+#ifndef POOLSTL_STD_SUPPLEMENT_NO_INCLUDE
 #include <execution>
 #endif
 #endif
+#endif
 
-#if !defined(__cpp_lib_parallel_algorithm)
+#if !defined(__cpp_lib_parallel_algorithm) || defined(POOLSTL_STD_SUPPLEMENT_FORCE)
 namespace std {
     namespace execution {
         using ::poolstl::execution::sequenced_policy;

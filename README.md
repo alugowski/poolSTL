@@ -18,17 +18,17 @@ Unfortunately compiler support [varies](https://en.cppreference.com/w/cpp/compil
 
 |                   |    Linux     |    macOS     |   Windows    |
 |:------------------|:------------:|:------------:|:------------:|
-| GCC 8-            |      ❌      |      ❌      |      ❌      |
 | GCC 9+            | TBB Required | TBB Required | TBB Required |
-| Clang (libstdc++) | TBB Required | TBB Required | TBB Required |
+| GCC 8-            |      ❌      |      ❌      |      ❌      |
 | Clang (libc++)    |      ❌      |      ❌      |      ❌      |
+| Clang (libstdc++) | TBB Required | TBB Required | TBB Required |
 | Apple Clang       |              |      ❌      |              |
 | MSVC 15.7+ (2017) |              |              |      ✅      |
 | [Parallel STL](https://www.intel.com/content/www/us/en/developer/articles/guide/get-started-with-parallel-stl.html) | TBB Required | TBB Required | TBB Required |
-| **poolSTL**       |      ✅      |      ✅      |      ✅      |
+| **poolSTL**       |      ✅*     |      ✅*     |      ✅*     |
 
-PoolSTL is a *supplement* to fill in the support gaps. It is small, easy to integrate, and has no external dependencies.
-Note that poolSTL is not a full implementation; only the basics are covered.
+PoolSTL is a *supplement* to fill in the support gaps. It is not a full implementation; only the basics are covered.
+However, it is small, easy to integrate, and has no external dependencies. A good backup to the other options.
 
 Use poolSTL exclusively, or only on platforms lacking native support,
 or only if [TBB](https://www.intel.com/content/www/us/en/developer/tools/oneapi/onetbb.html) is not present.
@@ -228,7 +228,6 @@ PoolSTL will fill in automatically on GCC <9 and Apple Clang.
 
 **Example use case 2:** You'd *prefer* to use the TBB version, but don't want to fail on systems that don't have it.
 Simply use the supplement as above, but have your build system (CMake, meson, etc.) check for TBB.
-If not found define `POOLSTL_STD_SUPPLEMENT_NO_INCLUDE`.  
-
-If defined, the supplement will not `#include <execution>` (and neither should your code!),
-thus dropping the TBB link requirement. The poolSTL supplement fills in. See the supplement section of [tests/CMakeLists.txt](tests/CMakeLists.txt) for an example.
+If not found, define `POOLSTL_STD_SUPPLEMENT_NO_INCLUDE` and the supplement will not `#include <execution>` (and neither should your code!),
+thus dropping the TBB link requirement. The poolSTL supplement fills in.  
+See the supplement section of [tests/CMakeLists.txt](tests/CMakeLists.txt) for an example.

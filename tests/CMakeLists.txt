@@ -73,23 +73,25 @@ target_compile_features(cpp11_test PUBLIC cxx_std_11)
 
 # Test std::execution supplementation.
 # The test code uses only std::execution::par, seq, and par_unseq.
-# On compilers with support poolSTL does nothing, else poolSTL creates a fallback using poolstl::par.
+# On compilers with support poolSTL does nothing, else poolSTL aliases poolstl::par to the std::execution policies.
+# This way users may write code using standard std::execution and still support platforms lacking support.
 add_executable(supplement_test supplement_test.cpp)
 target_link_libraries(supplement_test PUBLIC poolSTL::poolSTL)
 target_compile_features(supplement_test PUBLIC cxx_std_17)
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     # GCC and Clang require TBB for std::execution::par.
-    # MinGW will compile std::execution::par without TBB, but performance is sequential.
+    # MinGW will compile std::execution::par without TBB, but performance is sequential. (Verified as of MinGW 13).
     find_package(TBB)
     if (TBB_FOUND)
         target_link_libraries(supplement_test PUBLIC TBB::tbb)
     else()
         message("No TBB")
         # Prevent including <execution>, as doing that requires linking against TBB on newer GCC/Clang.
+        # User code must not #include <execution> either.
         target_compile_definitions(supplement_test PUBLIC POOLSTL_STD_SUPPLEMENT_NO_INCLUDE)
         if (MINGW)
             # extra hack!
-            # MinGW declares support, so must override poolSTL's auto-detection to enable the supplement.
+            # MinGW declares support, so override poolSTL's auto-detection to enable the supplement.
             target_compile_definitions(supplement_test PUBLIC POOLSTL_STD_SUPPLEMENT_FORCE)
         endif()
     endif()

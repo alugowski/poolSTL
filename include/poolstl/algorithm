@@ -294,4 +294,38 @@ namespace std {
     }
 }
 
+namespace poolstl {
+
+    template <class RandIt, class ChunkConstructor, class UnaryFunction>
+    void for_each_chunk(RandIt first, RandIt last, ChunkConstructor construct, UnaryFunction f) {
+        if (first == last) {
+            return;
+        }
+
+        auto chunk_data = construct();
+        for (; first != last; ++first) {
+            f(*first, chunk_data);
+        }
+    }
+
+    /**
+     * NOTE: Iterators are expected to be random access.
+     *
+     * Like `std::for_each`, but exposes the chunking. The `construct` method is called once per parallel chunk and
+     * its output is passed to `f`.
+     *
+     * Useful for cases where an expensive workspace can be shared between loop iterations
+     * but cannot be shared by all parallel iterations.
+     */
+    template <class ExecPolicy, class RandIt, class ChunkConstructor, class UnaryFunction>
+    poolstl::internal::enable_if_par<ExecPolicy, void>
+    for_each_chunk(ExecPolicy&& policy, RandIt first, RandIt last, ChunkConstructor construct, UnaryFunction f) {
+        auto futures = poolstl::internal::parallel_chunk_for(std::forward<ExecPolicy>(policy), first, last,
+                                                             [&construct, &f](RandIt chunk_first, RandIt chunk_last) {
+                                                                 for_each_chunk(chunk_first, chunk_last, construct, f);
+                                                             });
+        poolstl::internal::get_futures(futures);
+    }
+}
+
 #endif

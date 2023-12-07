@@ -242,6 +242,38 @@ TEST_CASE("for_each_n", "[alg][algorithm]") {
     }
 }
 
+TEST_CASE("for_each_chunk", "[alg][algorithm][poolstl]") {
+    std::atomic<int> sum{0};
+    std::atomic<int> num_chunks{0};
+    for (auto num_threads : test_thread_counts) {
+        ttp::task_thread_pool pool(num_threads);
+
+        for (auto num_iters : test_arr_sizes) {
+            auto v = iota_vector(num_iters);
+
+            for (auto is_sequential : {true, false}) {
+                num_chunks = 0;
+                sum = 0;
+                auto cc = [&]() { ++num_chunks; return 1; };
+                auto f = [&](auto, auto) { ++sum; };
+                if (is_sequential) {
+                    poolstl::for_each_chunk(poolstl::par_if(false), v.cbegin(), v.cend(), cc, f);
+                    REQUIRE(num_chunks == (v.empty() ? 0 : 1));
+                } else {
+                    poolstl::for_each_chunk(poolstl::par.on(pool),  v.cbegin(), v.cend(), cc, f);
+                    if (num_threads != 0) {
+                        REQUIRE(num_chunks <= std::min((int)v.size(), num_threads));
+                    }
+                    if (!v.empty()) {
+                        REQUIRE(num_chunks > 0);
+                    }
+                }
+                REQUIRE(sum == num_iters);
+            }
+        }
+    }
+}
+
 TEST_CASE("sort", "[alg][algorithm]") {
     for (auto num_threads : test_thread_counts) {
         ttp::task_thread_pool pool(num_threads);

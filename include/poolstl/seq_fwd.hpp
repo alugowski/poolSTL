@@ -92,4 +92,8 @@ namespace std {
 #endif
 }
 
+namespace poolstl {
+    POOLSTL_DEFINE_BOTH_SEQ_FWD_AND_PAR_IF_VOID(poolstl, for_each_chunk)
+}
+
 #endif

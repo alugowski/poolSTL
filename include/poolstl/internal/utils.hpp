@@ -8,8 +8,8 @@
 
 // Version macros.
 #define POOLSTL_VERSION_MAJOR 0
-#define POOLSTL_VERSION_MINOR 4
-#define POOLSTL_VERSION_PATCH 0
+#define POOLSTL_VERSION_MINOR 3
+#define POOLSTL_VERSION_PATCH 1
 
 #include <cstddef>
 #include <functional>

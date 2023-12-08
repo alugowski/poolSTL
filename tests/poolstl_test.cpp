@@ -26,15 +26,6 @@ namespace Catch {
     };
 }
 
-#if !POOLSTL_HAVE_CXX17
-namespace poolstl {
-    // To make tests work on C++14.
-    // Tests use par_if(false) to exercise the par_if code path.
-    execution::sequenced_policy par_if(bool) {
-        return seq;
-    }
-}
-#endif
 
 TEST_CASE("any_all_none", "[alg][algorithm]") {
     for (auto num_threads : test_thread_counts) {

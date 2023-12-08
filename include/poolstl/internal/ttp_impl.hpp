@@ -28,7 +28,9 @@ namespace poolstl {
             auto& task_pool = policy.pool();
 
             for (const auto& args : args_list) {
-                futures.emplace_back(task_pool.submit([op](const auto& args_fwd) { std::apply(op, args_fwd); }, args));
+                futures.emplace_back(task_pool.submit([](Op op, const auto& args_fwd) {
+                        std::apply(op, args_fwd);
+                    }, op, args));
             }
 
             return futures;
@@ -36,14 +38,16 @@ namespace poolstl {
 #endif
 
         /**
-         * Chunk a single range.
+         * Chunk a single range, with autodetected return types.
          */
-        template <class ExecPolicy, class RandIt, class Chunk>
-        std::vector<std::future<decltype(std::declval<Chunk>()(std::declval<RandIt>(), std::declval<RandIt>()))>>
-        parallel_chunk_for(ExecPolicy &&policy, RandIt first, RandIt last, Chunk chunk, int extra_split_factor = 1) {
-            std::vector<std::future<
-                decltype(std::declval<Chunk>()(std::declval<RandIt>(), std::declval<RandIt>()))
-                >> futures;
+        template <class ExecPolicy, class RandIt, class Chunk,
+            class ChunkRet = decltype(std::declval<Chunk>()(std::declval<RandIt>(), std::declval<RandIt>()))>
+        std::vector<std::future<ChunkRet>>
+        parallel_chunk_for_gen(ExecPolicy &&policy, RandIt first, RandIt last, Chunk chunk,
+                               ChunkRet* = (decltype(std::declval<Chunk>()(std::declval<RandIt>(),
+                                                     std::declval<RandIt>()))*)nullptr,
+                               int extra_split_factor = 1) {
+            std::vector<std::future<ChunkRet>> futures;
             auto& task_pool = policy.pool();
             auto chunk_size = get_chunk_size(first, last, extra_split_factor * task_pool.get_num_threads());
 
@@ -51,7 +55,31 @@ namespace poolstl {
                 auto iter_chunk_size = get_iter_chunk_size(first, last, chunk_size);
                 RandIt loop_end = advanced(first, iter_chunk_size);
 
-                futures.emplace_back(task_pool.submit(chunk, first, loop_end));
+                futures.emplace_back(task_pool.submit(std::forward<Chunk>(chunk), first, loop_end));
+
+                first = loop_end;
+            }
+
+            return futures;
+        }
+
+        /**
+         * Chunk a single range.
+         */
+        template <class ExecPolicy, class RandIt, class Chunk, class ChunkRet, typename... A>
+        std::vector<std::future<ChunkRet>>
+        parallel_chunk_for_1(ExecPolicy &&policy, RandIt first, RandIt last,
+                             Chunk chunk, ChunkRet*, A&&... chunk_args) {
+            std::vector<std::future<ChunkRet>> futures;
+            auto& task_pool = policy.pool();
+            auto chunk_size = get_chunk_size(first, last, task_pool.get_num_threads());
+
+            while (first < last) {
+                auto iter_chunk_size = get_iter_chunk_size(first, last, chunk_size);
+                RandIt loop_end = advanced(first, iter_chunk_size);
+
+                futures.emplace_back(task_pool.submit(std::forward<Chunk>(chunk), first, loop_end,
+                                                      std::forward<A>(chunk_args)...));
 
                 first = loop_end;
             }
@@ -62,17 +90,11 @@ namespace poolstl {
         /**
          * Element-wise chunk two ranges.
          */
-        template <class ExecPolicy, class RandIt1, class RandIt2, class Chunk>
-        std::vector<std::future<decltype(std::declval<Chunk>()(
-            std::declval<RandIt1>(),
-            std::declval<RandIt1>(),
-            std::declval<RandIt2>()))>>
-        parallel_chunk_for(ExecPolicy &&policy, RandIt1 first1, RandIt1 last1, RandIt2 first2, Chunk chunk) {
-            std::vector<std::future<decltype(std::declval<Chunk>()(
-                    std::declval<RandIt1>(),
-                    std::declval<RandIt1>(),
-                    std::declval<RandIt2>()))
-            >> futures;
+        template <class ExecPolicy, class RandIt1, class RandIt2, class Chunk, class ChunkRet, typename... A>
+        std::vector<std::future<ChunkRet>>
+        parallel_chunk_for_2(ExecPolicy &&policy, RandIt1 first1, RandIt1 last1, RandIt2 first2,
+                             Chunk chunk, ChunkRet*, A&&... chunk_args) {
+            std::vector<std::future<ChunkRet>> futures;
             auto& task_pool = policy.pool();
             auto chunk_size = get_chunk_size(first1, last1, task_pool.get_num_threads());
 
@@ -80,7 +102,8 @@ namespace poolstl {
                 auto iter_chunk_size = get_iter_chunk_size(first1, last1, chunk_size);
                 RandIt1 loop_end = advanced(first1, iter_chunk_size);
 
-                futures.emplace_back(task_pool.submit(chunk, first1, loop_end, first2));
+                futures.emplace_back(task_pool.submit(std::forward<Chunk>(chunk), first1, loop_end, first2,
+                                                      std::forward<A>(chunk_args)...));
 
                 first1 = loop_end;
                 std::advance(first2, iter_chunk_size);
@@ -92,20 +115,12 @@ namespace poolstl {
         /**
          * Element-wise chunk three ranges.
          */
-        template <class ExecPolicy, class RandIt1, class RandIt2, class RandIt3, class Chunk>
-        std::vector<std::future<decltype(std::declval<Chunk>()(
-            std::declval<RandIt1>(),
-            std::declval<RandIt1>(),
-            std::declval<RandIt2>(),
-            std::declval<RandIt3>()))>>
-        parallel_chunk_for(ExecPolicy &&policy, RandIt1 first1, RandIt1 last1, RandIt2 first2, RandIt3 first3,
-                           Chunk chunk) {
-            std::vector<std::future<decltype(std::declval<Chunk>()(
-                std::declval<RandIt1>(),
-                std::declval<RandIt1>(),
-                std::declval<RandIt2>(),
-                std::declval<RandIt3>()))
-            >> futures;
+        template <class ExecPolicy, class RandIt1, class RandIt2, class RandIt3,
+                  class Chunk, class ChunkRet, typename... A>
+        std::vector<std::future<ChunkRet>>
+        parallel_chunk_for_3(ExecPolicy &&policy, RandIt1 first1, RandIt1 last1, RandIt2 first2, RandIt3 first3,
+                           Chunk chunk, ChunkRet*, A&&... chunk_args) {
+            std::vector<std::future<ChunkRet>> futures;
             auto& task_pool = policy.pool();
             auto chunk_size = get_chunk_size(first1, last1, task_pool.get_num_threads());
 
@@ -113,7 +128,8 @@ namespace poolstl {
                 auto iter_chunk_size = get_iter_chunk_size(first1, last1, chunk_size);
                 RandIt1 loop_end = advanced(first1, iter_chunk_size);
 
-                futures.emplace_back(task_pool.submit(chunk, first1, loop_end, first2, first3));
+                futures.emplace_back(task_pool.submit(std::forward<Chunk>(chunk), first1, loop_end, first2, first3,
+                                                      std::forward<A>(chunk_args)...));
 
                 first1 = loop_end;
                 std::advance(first2, iter_chunk_size);
@@ -135,7 +151,7 @@ namespace poolstl {
             }
 
             // Sort chunks in parallel
-            auto futures = parallel_chunk_for(std::forward<ExecPolicy>(policy), first, last,
+            auto futures = parallel_chunk_for_gen(std::forward<ExecPolicy>(policy), first, last,
                              [&comp, stable] (RandIt chunk_first, RandIt chunk_last) {
                                  if (stable) {
                                      std::stable_sort(chunk_first, chunk_last, comp);

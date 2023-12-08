@@ -28,7 +28,7 @@ namespace std {
         }
 
         // Pass 1: Chunk the input and find the sum of each chunk
-        auto futures = poolstl::internal::parallel_chunk_for(std::forward<ExecPolicy>(policy), first, last,
+        auto futures = poolstl::internal::parallel_chunk_for_gen(std::forward<ExecPolicy>(policy), first, last,
                              [binop](RandIt1 chunk_first, RandIt1 chunk_last) {
                                  auto sum = std::accumulate(chunk_first, chunk_last, T{}, binop);
                                  return std::make_tuple(std::make_pair(chunk_first, chunk_last), sum);
@@ -83,10 +83,9 @@ namespace std {
     template <class ExecPolicy, class RandIt, class T, class BinaryOp>
     poolstl::internal::enable_if_par<ExecPolicy, T>
     reduce(ExecPolicy &&policy, RandIt first, RandIt last, T init, BinaryOp binop) {
-        auto futures = poolstl::internal::parallel_chunk_for(std::forward<ExecPolicy>(policy), first, last,
-                                  [init, binop](RandIt chunk_first, RandIt chunk_last) {
-                                      return poolstl::internal::cpp17::reduce(chunk_first, chunk_last, init, binop);
-                                  });
+        auto futures = poolstl::internal::parallel_chunk_for_1(std::forward<ExecPolicy>(policy), first, last,
+                                                               poolstl::internal::cpp17::reduce<RandIt, T, BinaryOp>,
+                                                               (T*)nullptr, init, binop);
 
         return poolstl::internal::cpp17::reduce(
             poolstl::internal::get_wrap(futures.begin()),
@@ -125,10 +124,10 @@ namespace std {
     transform_reduce(ExecPolicy&& policy, RandIt1 first1, RandIt1 last1, T init,
                      BinaryReductionOp reduce_op, UnaryTransformOp transform_op) {
 
-        auto futures = poolstl::internal::parallel_chunk_for(std::forward<ExecPolicy>(policy), first1, last1,
-             [&init, &reduce_op, &transform_op](RandIt1 chunk_first1, RandIt1 chunk_last1) {
-                 return std::transform_reduce(chunk_first1, chunk_last1, init, reduce_op, transform_op);
-             });
+        auto futures = poolstl::internal::parallel_chunk_for_1(std::forward<ExecPolicy>(policy), first1, last1,
+                                                               std::transform_reduce<RandIt1, T,
+                                                                                   BinaryReductionOp, UnaryTransformOp>,
+                                                               (T*)nullptr, init, reduce_op, transform_op);
 
         return poolstl::internal::cpp17::reduce(
             poolstl::internal::get_wrap(futures.begin()),
@@ -144,10 +143,10 @@ namespace std {
     transform_reduce(ExecPolicy&& policy, RandIt1 first1, RandIt1 last1, RandIt2 first2, T init,
                      BinaryReductionOp reduce_op, BinaryTransformOp transform_op) {
 
-        auto futures = poolstl::internal::parallel_chunk_for(std::forward<ExecPolicy>(policy), first1, last1, first2,
-             [&init, &reduce_op, &transform_op](RandIt1 chunk_first1, RandIt1 chunk_last1, RandIt2 chunk_first2) {
-                 return std::transform_reduce(chunk_first1, chunk_last1, chunk_first2, init, reduce_op, transform_op);
-             });
+        auto futures = poolstl::internal::parallel_chunk_for_2(std::forward<ExecPolicy>(policy), first1, last1, first2,
+                                                               std::transform_reduce<RandIt1, RandIt2, T,
+                                                                                  BinaryReductionOp, BinaryTransformOp>,
+                                                               (T*)nullptr, init, reduce_op, transform_op);
 
         return poolstl::internal::cpp17::reduce(
             poolstl::internal::get_wrap(futures.begin()),

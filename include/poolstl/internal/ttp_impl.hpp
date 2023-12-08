@@ -25,7 +25,7 @@ namespace poolstl {
         std::vector<std::future<void>>
         parallel_apply(ExecPolicy &&policy, Op op, const ArgContainer& args_list) {
             std::vector<std::future<void>> futures;
-            auto& task_pool = policy.pool();
+            auto& task_pool = *policy.pool();
 
             for (const auto& args : args_list) {
                 futures.emplace_back(task_pool.submit([](Op op, const auto& args_fwd) {
@@ -48,7 +48,7 @@ namespace poolstl {
                                                      std::declval<RandIt>()))*)nullptr,
                                int extra_split_factor = 1) {
             std::vector<std::future<ChunkRet>> futures;
-            auto& task_pool = policy.pool();
+            auto& task_pool = *policy.pool();
             auto chunk_size = get_chunk_size(first, last, extra_split_factor * task_pool.get_num_threads());
 
             while (first < last) {
@@ -71,7 +71,7 @@ namespace poolstl {
         parallel_chunk_for_1(ExecPolicy &&policy, RandIt first, RandIt last,
                              Chunk chunk, ChunkRet*, A&&... chunk_args) {
             std::vector<std::future<ChunkRet>> futures;
-            auto& task_pool = policy.pool();
+            auto& task_pool = *policy.pool();
             auto chunk_size = get_chunk_size(first, last, task_pool.get_num_threads());
 
             while (first < last) {
@@ -95,7 +95,7 @@ namespace poolstl {
         parallel_chunk_for_2(ExecPolicy &&policy, RandIt1 first1, RandIt1 last1, RandIt2 first2,
                              Chunk chunk, ChunkRet*, A&&... chunk_args) {
             std::vector<std::future<ChunkRet>> futures;
-            auto& task_pool = policy.pool();
+            auto& task_pool = *policy.pool();
             auto chunk_size = get_chunk_size(first1, last1, task_pool.get_num_threads());
 
             while (first1 < last1) {
@@ -121,7 +121,7 @@ namespace poolstl {
         parallel_chunk_for_3(ExecPolicy &&policy, RandIt1 first1, RandIt1 last1, RandIt2 first2, RandIt3 first3,
                            Chunk chunk, ChunkRet*, A&&... chunk_args) {
             std::vector<std::future<ChunkRet>> futures;
-            auto& task_pool = policy.pool();
+            auto& task_pool = *policy.pool();
             auto chunk_size = get_chunk_size(first1, last1, task_pool.get_num_threads());
 
             while (first1 < last1) {
@@ -163,7 +163,7 @@ namespace poolstl {
 
             // Merge the sorted ranges
             using SortedRange = std::pair<RandIt, RandIt>;
-            auto& task_pool = policy.pool();
+            auto& task_pool = *policy.pool();
             std::vector<SortedRange> subranges;
             do {
                 for (auto& future : futures) {

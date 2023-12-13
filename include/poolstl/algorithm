@@ -10,6 +10,7 @@
 
 #include "execution"
 #include "internal/ttp_impl.hpp"
+#include "internal/thread_impl.hpp"
 
 namespace std {
 
@@ -18,7 +19,7 @@ namespace std {
      * See std::copy https://en.cppreference.com/w/cpp/algorithm/copy
      */
     template <class ExecPolicy, class RandIt1, class RandIt2>
-    poolstl::internal::enable_if_par<ExecPolicy, RandIt2>
+    poolstl::internal::enable_if_poolstl_policy<ExecPolicy, RandIt2>
     copy(ExecPolicy &&policy, RandIt1 first, RandIt1 last, RandIt2 dest) {
         if (poolstl::internal::is_seq<ExecPolicy>(policy)) {
             return std::copy(first, last, dest);
@@ -35,7 +36,7 @@ namespace std {
      * See std::copy_n https://en.cppreference.com/w/cpp/algorithm/copy_n
      */
     template <class ExecPolicy, class RandIt1, class Size, class RandIt2>
-    poolstl::internal::enable_if_par<ExecPolicy, RandIt2>
+    poolstl::internal::enable_if_poolstl_policy<ExecPolicy, RandIt2>
     copy_n(ExecPolicy &&policy, RandIt1 first, Size n, RandIt2 dest) {
         if (n <= 0) {
             return dest;
@@ -50,7 +51,7 @@ namespace std {
      * See std::count_if https://en.cppreference.com/w/cpp/algorithm/count_if
      */
     template <class ExecPolicy, class RandIt, class UnaryPredicate>
-    poolstl::internal::enable_if_par<ExecPolicy, typename iterator_traits<RandIt>::difference_type>
+    poolstl::internal::enable_if_poolstl_policy<ExecPolicy, typename iterator_traits<RandIt>::difference_type>
     count_if(ExecPolicy&& policy, RandIt first, RandIt last, UnaryPredicate p) {
         if (poolstl::internal::is_seq<ExecPolicy>(policy)) {
             return std::count_if(first, last, p);
@@ -59,7 +60,8 @@ namespace std {
         using T = typename iterator_traits<RandIt>::difference_type;
 
         auto futures = poolstl::internal::parallel_chunk_for_1(std::forward<ExecPolicy>(policy), first, last,
-                                                               std::count_if<RandIt, UnaryPredicate>, (T*)nullptr, p);
+                                                               std::count_if<RandIt, UnaryPredicate>,
+                                                               (T*)nullptr, 1, p);
 
         return poolstl::internal::cpp17::reduce(
             poolstl::internal::get_wrap(futures.begin()),
@@ -71,7 +73,7 @@ namespace std {
      * See std::count https://en.cppreference.com/w/cpp/algorithm/count
      */
     template <class ExecPolicy, class RandIt, class T>
-    poolstl::internal::enable_if_par<ExecPolicy, typename iterator_traits<RandIt>::difference_type>
+    poolstl::internal::enable_if_poolstl_policy<ExecPolicy, typename iterator_traits<RandIt>::difference_type>
     count(ExecPolicy&& policy, RandIt first, RandIt last, const T& value) {
         return std::count_if(std::forward<ExecPolicy>(policy), first, last,
                              [&value](const T& test) { return test == value; });
@@ -82,16 +84,15 @@ namespace std {
      * See std::fill https://en.cppreference.com/w/cpp/algorithm/fill
      */
     template <class ExecPolicy, class RandIt, class Tp>
-    poolstl::internal::enable_if_par<ExecPolicy, void>
+    poolstl::internal::enable_if_poolstl_policy<ExecPolicy, void>
     fill(ExecPolicy &&policy, RandIt first, RandIt last, const Tp& value) {
         if (poolstl::internal::is_seq<ExecPolicy>(policy)) {
             std::fill(first, last, value);
             return;
         }
 
-        auto futures = poolstl::internal::parallel_chunk_for_1(std::forward<ExecPolicy>(policy), first, last,
-                                                               std::fill<RandIt, Tp>, (void*)nullptr, value);
-        poolstl::internal::get_futures(futures);
+        poolstl::internal::parallel_chunk_for_1_wait(std::forward<ExecPolicy>(policy), first, last,
+                                                     std::fill<RandIt, Tp>, (void*)nullptr, 1, value);
     }
 
     /**
@@ -99,7 +100,7 @@ namespace std {
      * See std::fill_n https://en.cppreference.com/w/cpp/algorithm/fill_n
      */
     template <class ExecPolicy, class RandIt, class Size, class Tp>
-    poolstl::internal::enable_if_par<ExecPolicy, RandIt>
+    poolstl::internal::enable_if_poolstl_policy<ExecPolicy, RandIt>
     fill_n(ExecPolicy &&policy, RandIt first, Size n, const Tp& value) {
         if (n <= 0) {
             return first;
@@ -114,7 +115,7 @@ namespace std {
      * See std::find_if https://en.cppreference.com/w/cpp/algorithm/find_if
      */
     template <class ExecPolicy, class RandIt, class UnaryPredicate>
-    poolstl::internal::enable_if_par<ExecPolicy, RandIt>
+    poolstl::internal::enable_if_poolstl_policy<ExecPolicy, RandIt>
     find_if(ExecPolicy &&policy, RandIt first, RandIt last, UnaryPredicate p) {
         if (poolstl::internal::is_seq<ExecPolicy>(policy)) {
             return std::find_if(first, last, p);
@@ -124,7 +125,7 @@ namespace std {
         diff_t n = std::distance(first, last);
         std::atomic<diff_t> extremum(n);
 
-        auto futures = poolstl::internal::parallel_chunk_for_gen(std::forward<ExecPolicy>(policy), first, last,
+        poolstl::internal::parallel_chunk_for_1_wait(std::forward<ExecPolicy>(policy), first, last,
                                         [&first, &extremum, &p](RandIt chunk_first, RandIt chunk_last) {
                                             if (std::distance(first, chunk_first) > extremum) {
                                              // already found by another task
@@ -142,7 +143,6 @@ namespace std {
                                             }
                                         }, (void*)nullptr,
                                         8); // use small tasks so later ones may exit early if item is already found
-        poolstl::internal::get_futures(futures);
         return extremum == n ? last : first + extremum;
     }
 
@@ -151,7 +151,7 @@ namespace std {
      * See std::find_if_not https://en.cppreference.com/w/cpp/algorithm/find_if_not
      */
     template <class ExecPolicy, class RandIt, class UnaryPredicate>
-    poolstl::internal::enable_if_par<ExecPolicy, RandIt>
+    poolstl::internal::enable_if_poolstl_policy<ExecPolicy, RandIt>
     find_if_not(ExecPolicy &&policy, RandIt first, RandIt last, UnaryPredicate p) {
         return std::find_if(std::forward<ExecPolicy>(policy), first, last,
 #if POOLSTL_HAVE_CXX17_LIB
@@ -167,7 +167,7 @@ namespace std {
      * See std::find https://en.cppreference.com/w/cpp/algorithm/find
      */
     template <class ExecPolicy, class RandIt, class T>
-    poolstl::internal::enable_if_par<ExecPolicy, RandIt>
+    poolstl::internal::enable_if_poolstl_policy<ExecPolicy, RandIt>
     find(ExecPolicy &&policy, RandIt first, RandIt last, const T& value) {
         return std::find_if(std::forward<ExecPolicy>(policy), first, last,
                             [&value](const T& test) { return value == test; });
@@ -178,8 +178,10 @@ namespace std {
      * See std::for_each https://en.cppreference.com/w/cpp/algorithm/for_each
      */
     template <class ExecPolicy, class RandIt, class UnaryFunction>
-    poolstl::internal::enable_if_par<ExecPolicy, void>
+    poolstl::internal::enable_if_poolstl_policy<ExecPolicy, void>
     for_each(ExecPolicy &&policy, RandIt first, RandIt last, UnaryFunction f) {
+        // Using a lambda instead of just calling the non-policy std::for_each because it appears to
+        // result in a smaller binary.
         auto chunk_func = [&f](RandIt chunk_first, RandIt chunk_last) {
             for (; chunk_first != chunk_last; ++chunk_first) {
                 f(*chunk_first);
@@ -191,12 +193,8 @@ namespace std {
             return;
         }
 
-//        auto futures = poolstl::internal::parallel_chunk_for_1(std::forward<ExecPolicy>(policy), first, last,
-//                                                               std::for_each<RandIt, UnaryFunction>,
-//                                                               (UnaryFunction*)nullptr, f);
-        auto futures = poolstl::internal::parallel_chunk_for_1(std::forward<ExecPolicy>(policy), first, last,
-                                                               chunk_func, (void*)nullptr);
-        poolstl::internal::get_futures(futures);
+        poolstl::internal::parallel_chunk_for_1_wait(std::forward<ExecPolicy>(policy), first, last,
+                                                     chunk_func, (void*)nullptr, 1);
     }
 
     /**
@@ -204,7 +202,7 @@ namespace std {
      * See std::for_each_n https://en.cppreference.com/w/cpp/algorithm/for_each_n
      */
     template <class ExecPolicy, class RandIt, class Size, class UnaryFunction>
-    poolstl::internal::enable_if_par<ExecPolicy, RandIt>
+    poolstl::internal::enable_if_poolstl_policy<ExecPolicy, RandIt>
     for_each_n(ExecPolicy &&policy, RandIt first, Size n, UnaryFunction f) {
         RandIt last = poolstl::internal::advanced(first, n);
         std::for_each(std::forward<ExecPolicy>(policy), first, last, f);
@@ -216,7 +214,7 @@ namespace std {
      * See std::sort https://en.cppreference.com/w/cpp/algorithm/sort
      */
     template <class ExecPolicy, class RandIt, class Compare>
-    poolstl::internal::enable_if_par<ExecPolicy, void>
+    poolstl::internal::enable_if_poolstl_policy<ExecPolicy, void>
     sort(ExecPolicy &&policy, RandIt first, RandIt last, Compare comp) {
         if (poolstl::internal::is_seq<ExecPolicy>(policy)) {
             std::sort(first, last, comp);
@@ -231,7 +229,7 @@ namespace std {
      * See std::sort https://en.cppreference.com/w/cpp/algorithm/sort
      */
     template <class ExecPolicy, class RandIt>
-    poolstl::internal::enable_if_par<ExecPolicy, void>
+    poolstl::internal::enable_if_poolstl_policy<ExecPolicy, void>
     sort(ExecPolicy &&policy, RandIt first, RandIt last) {
         using T = typename std::iterator_traits<RandIt>::value_type;
         std::sort(std::forward<ExecPolicy>(policy), first, last, std::less<T>());
@@ -242,7 +240,7 @@ namespace std {
      * See std::stable_sort https://en.cppreference.com/w/cpp/algorithm/stable_sort
      */
     template <class ExecPolicy, class RandIt, class Compare>
-    poolstl::internal::enable_if_par<ExecPolicy, void>
+    poolstl::internal::enable_if_poolstl_policy<ExecPolicy, void>
     stable_sort(ExecPolicy &&policy, RandIt first, RandIt last, Compare comp) {
         if (poolstl::internal::is_seq<ExecPolicy>(policy)) {
             std::stable_sort(first, last, comp);
@@ -257,7 +255,7 @@ namespace std {
      * See std::stable_sort https://en.cppreference.com/w/cpp/algorithm/stable_sort
      */
     template <class ExecPolicy, class RandIt>
-    poolstl::internal::enable_if_par<ExecPolicy, void>
+    poolstl::internal::enable_if_poolstl_policy<ExecPolicy, void>
     stable_sort(ExecPolicy &&policy, RandIt first, RandIt last) {
         using T = typename std::iterator_traits<RandIt>::value_type;
         std::stable_sort(std::forward<ExecPolicy>(policy), first, last, std::less<T>());
@@ -268,7 +266,7 @@ namespace std {
      * See std::transform https://en.cppreference.com/w/cpp/algorithm/transform
      */
     template <class ExecPolicy, class RandIt1, class RandIt2, class UnaryOperation>
-    poolstl::internal::enable_if_par<ExecPolicy, RandIt2>
+    poolstl::internal::enable_if_poolstl_policy<ExecPolicy, RandIt2>
     transform(ExecPolicy&& policy, RandIt1 first1, RandIt1 last1,
               RandIt2 dest, UnaryOperation unary_op) {
         if (poolstl::internal::is_seq<ExecPolicy>(policy)) {
@@ -288,7 +286,7 @@ namespace std {
      * See std::transform https://en.cppreference.com/w/cpp/algorithm/transform
      */
     template <class ExecPolicy, class RandIt1, class RandIt2, class RandIt3, class BinaryOperation>
-    poolstl::internal::enable_if_par<ExecPolicy, RandIt3>
+    poolstl::internal::enable_if_poolstl_policy<ExecPolicy, RandIt3>
     transform(ExecPolicy&& policy, RandIt1 first1, RandIt1 last1,
               RandIt2 first2, RandIt3 dest, BinaryOperation binary_op) {
         if (poolstl::internal::is_seq<ExecPolicy>(policy)) {
@@ -309,7 +307,7 @@ namespace std {
      * See std::all_of https://en.cppreference.com/w/cpp/algorithm/all_of
      */
     template <class ExecPolicy, typename RandIt, typename Predicate>
-    poolstl::internal::enable_if_par<ExecPolicy, bool>
+    poolstl::internal::enable_if_poolstl_policy<ExecPolicy, bool>
     all_of(ExecPolicy&& policy, RandIt first, RandIt last, Predicate pred) {
         return last == std::find_if_not(std::forward<ExecPolicy>(policy), first, last, pred);
     }
@@ -319,7 +317,7 @@ namespace std {
      * See std::none_of https://en.cppreference.com/w/cpp/algorithm/none_of
      */
     template <class ExecPolicy, typename RandIt, typename Predicate>
-    poolstl::internal::enable_if_par<ExecPolicy, bool>
+    poolstl::internal::enable_if_poolstl_policy<ExecPolicy, bool>
     none_of(ExecPolicy&& policy, RandIt first, RandIt last, Predicate pred) {
         return last == std::find_if(std::forward<ExecPolicy>(policy), first, last, pred);
     }
@@ -329,7 +327,7 @@ namespace std {
      * See std::any_of https://en.cppreference.com/w/cpp/algorithm/any_of
      */
     template <class ExecPolicy, typename RandIt, typename Predicate>
-    poolstl::internal::enable_if_par<ExecPolicy, bool>
+    poolstl::internal::enable_if_poolstl_policy<ExecPolicy, bool>
     any_of(ExecPolicy&& policy, RandIt first, RandIt last, Predicate pred) {
         return !std::none_of(std::forward<ExecPolicy>(policy), first, last, pred);
     }
@@ -366,11 +364,9 @@ namespace poolstl {
             return;
         }
 
-        auto futures = poolstl::internal::parallel_chunk_for_1(std::forward<ExecPolicy>(policy), first, last,
-                                                               for_each_chunk<RandIt, ChunkConstructor, UnaryFunction>,
-                                                               (void *) nullptr, construct, f);
-        poolstl::internal::get_futures(futures);
-
+        poolstl::internal::parallel_chunk_for_1_wait(std::forward<ExecPolicy>(policy), first, last,
+                                                     for_each_chunk <RandIt, ChunkConstructor, UnaryFunction>,
+                                                     (void*)nullptr, 1, construct, f);
     }
 }
 

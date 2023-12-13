@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "utils.hpp"
+#include "../execution"
 
 namespace poolstl {
     namespace internal {
@@ -69,10 +70,10 @@ namespace poolstl {
         template <class ExecPolicy, class RandIt, class Chunk, class ChunkRet, typename... A>
         std::vector<std::future<ChunkRet>>
         parallel_chunk_for_1(ExecPolicy &&policy, RandIt first, RandIt last,
-                             Chunk chunk, ChunkRet*, A&&... chunk_args) {
+                             Chunk chunk, ChunkRet*, int extra_split_factor, A&&... chunk_args) {
             std::vector<std::future<ChunkRet>> futures;
             auto& task_pool = *policy.pool();
-            auto chunk_size = get_chunk_size(first, last, task_pool.get_num_threads());
+            auto chunk_size = get_chunk_size(first, last, extra_split_factor * task_pool.get_num_threads());
 
             while (first < last) {
                 auto iter_chunk_size = get_iter_chunk_size(first, last, chunk_size);
@@ -85,6 +86,19 @@ namespace poolstl {
             }
 
             return futures;
+        }
+
+        /**
+         * Chunk a single range.
+         */
+        template <class ExecPolicy, class RandIt, class Chunk, class ChunkRet, typename... A>
+        typename std::enable_if<!is_pure_threads_policy<ExecPolicy>::value, void>::type
+        parallel_chunk_for_1_wait(ExecPolicy &&policy, RandIt first, RandIt last,
+                                  Chunk chunk, ChunkRet* rettype, int extra_split_factor, A&&... chunk_args) {
+            auto futures = parallel_chunk_for_1(std::forward<ExecPolicy>(policy), first, last,
+                                                std::forward<Chunk>(chunk), rettype, extra_split_factor,
+                                                std::forward<A>(chunk_args)...);
+            get_futures(futures);
         }
 
         /**

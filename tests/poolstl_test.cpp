@@ -176,14 +176,20 @@ TEST_CASE("find", "[alg][algorithm]") {
                     // calls find_if
                     auto seq = std::find(poolstl::par_if(false), haystack.cbegin(), haystack.cend(), needle);
                     auto par = std::find(poolstl::par.on(pool),  haystack.cbegin(), haystack.cend(), needle);
+                    auto thd = std::find(poolstl::execution::par_if_threads(true, num_threads),
+                                         haystack.cbegin(), haystack.cend(), needle);
                     REQUIRE(seq == par);
+                    REQUIRE(seq == thd);
                 }
                 {
                     auto pred = [&](auto x) { return x < needle; };
                     // calls find_if
                     auto seq = std::find_if_not(poolstl::par_if(false), haystack.cbegin(), haystack.cend(), pred);
                     auto par = std::find_if_not(poolstl::par.on(pool),  haystack.cbegin(), haystack.cend(), pred);
+                    auto thd = std::find_if_not(poolstl::execution::par_if_threads(true, num_threads),
+                                                haystack.cbegin(), haystack.cend(), pred);
                     REQUIRE(seq == par);
+                    REQUIRE(seq == thd);
                 }
             }
         }
@@ -198,13 +204,23 @@ TEST_CASE("for_each", "[alg][algorithm]") {
         for (auto num_iters : test_arr_sizes) {
             auto v = iota_vector(num_iters);
 
-            for (auto is_sequential : {true, false}) {
+            for (auto which_impl : {0, 1, 2, 4}) {
                 sum = 0;
                 auto f = [&](auto) { ++sum; };
-                if (is_sequential) {
-                    std::for_each(poolstl::par_if(false), v.cbegin(), v.cend(), f);
-                } else {
-                    std::for_each(poolstl::par.on(pool),  v.cbegin(), v.cend(), f);
+                switch (which_impl) {
+                    case 0:
+                        std::for_each(poolstl::par_if(false), v.cbegin(), v.cend(), f);
+                        break;
+                    case 1:
+                        std::for_each(poolstl::par.on(pool),  v.cbegin(), v.cend(), f);
+                        break;
+                    case 2:
+                        std::for_each(poolstl::execution::par_if_threads(false, num_threads),  v.cbegin(), v.cend(), f);
+                        break;
+                    case 4:
+                        std::for_each(poolstl::execution::par_if_threads(true, num_threads),  v.cbegin(), v.cend(), f);
+                        break;
+                    default: break;
                 }
                 REQUIRE(sum == num_iters);
             }

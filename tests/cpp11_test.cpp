@@ -14,9 +14,18 @@
 
 int main() {
     std::vector<int> v = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+
+    // sequential
+    std::for_each(poolstl::seq, v.cbegin(), v.cend(), [](int x) {
+        std::cout << x;
+    });
+    std::cout << std::endl;
+
+    // parallel
     std::for_each(poolstl::par, v.cbegin(), v.cend(), [](int x) {
         std::cout << x;
     });
     std::cout << std::endl;
+
     return 0;
 }

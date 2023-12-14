@@ -293,13 +293,25 @@ TEST_CASE("sort", "[alg][algorithm]") {
                     case 1: scramble(source); break;
                     default: break;
                 }
-                std::vector<int> dest1(source);
-                std::vector<int> dest2(source);
 
-                std::sort(dest1.begin(), dest1.end());
-                std::sort(poolstl::par.on(pool), dest2.begin(), dest2.end());
+                for (auto which_impl : {0, 1}) {
+                    std::vector<int> dest1(source);
+                    std::vector<int> dest2(source);
 
-                REQUIRE(dest1 == dest2);
+                    std::sort(dest1.begin(), dest1.end());
+                    switch (which_impl) {
+                        case 0:
+                            std::sort(poolstl::par_if(false), dest2.begin(), dest2.end());
+                            break;
+                        case 1:
+                            std::sort(poolstl::par.on(pool), dest2.begin(), dest2.end());
+                            break;
+                        default:
+                            break;
+                    }
+
+                    REQUIRE(dest1 == dest2);
+                }
             }
         }
     }
@@ -322,13 +334,25 @@ TEST_CASE("stable_sort", "[alg][algorithm]") {
                     case 1: scramble(source); break;
                     default: break;
                 }
-                std::vector<stable_sort_element> dest1(source);
-                std::vector<stable_sort_element> dest2(source);
 
-                std::stable_sort(dest1.begin(), dest1.end());
-                std::stable_sort(poolstl::par.on(pool), dest2.begin(), dest2.end());
+                for (auto which_impl : {0, 1}) {
+                    std::vector<stable_sort_element> dest1(source);
+                    std::vector<stable_sort_element> dest2(source);
 
-                REQUIRE(dest1 == dest2);
+                    std::sort(dest1.begin(), dest1.end());
+                    switch (which_impl) {
+                        case 0:
+                            std::stable_sort(poolstl::par_if(false), dest2.begin(), dest2.end());
+                            break;
+                        case 1:
+                            std::stable_sort(poolstl::par.on(pool), dest2.begin(), dest2.end());
+                            break;
+                        default:
+                            break;
+                    }
+
+                    REQUIRE(dest1 == dest2);
+                }
             }
         }
     }
@@ -604,6 +628,26 @@ TEST_CASE("iota_iter(def)", "[iterator]") {
     // default constructible
     iota_iter<long> c;
     REQUIRE(*c == 0);
+}
+
+struct gettable {
+    explicit gettable(int v): value(v) {}
+    int value;
+    POOLSTL_NO_DISCARD int get() const { return value; }
+};
+
+TEST_CASE("getting_iter", "[coverage]") {
+    // Tests for required functionality not exercised in the proper tests.
+    std::vector<gettable> vec = {gettable(0), gettable(1), gettable(2), gettable(3)};
+    auto iter = poolstl::internal::getting_iter<std::vector<gettable>::iterator>(vec.begin());
+    REQUIRE(*iter == 0);
+    REQUIRE(iter[0] == 0);
+    REQUIRE(iter[2] == 2);
+}
+
+TEST_CASE("seq", "[coverage]") {
+    // Tests for required functionality not exercised in the proper tests.
+    REQUIRE_THROWS(poolstl::seq.pool());
 }
 
 std::mt19937 rng{1};

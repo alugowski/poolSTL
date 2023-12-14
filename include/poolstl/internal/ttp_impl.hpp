@@ -158,20 +158,16 @@ namespace poolstl {
          *
          * @param stable Whether to use std::stable_sort or std::sort
          */
-        template <class ExecPolicy, class RandIt, class Compare>
-        void parallel_sort(ExecPolicy &&policy, RandIt first, RandIt last, Compare comp, bool stable) {
+        template <class ExecPolicy, class RandIt, class Compare, class SortFunc>
+        void parallel_sort(ExecPolicy &&policy, RandIt first, RandIt last, Compare comp, SortFunc sortfunc) {
             if (first == last) {
                 return;
             }
 
             // Sort chunks in parallel
             auto futures = parallel_chunk_for_gen(std::forward<ExecPolicy>(policy), first, last,
-                             [&comp, stable] (RandIt chunk_first, RandIt chunk_last) {
-                                 if (stable) {
-                                     std::stable_sort(chunk_first, chunk_last, comp);
-                                 } else {
-                                     std::sort(chunk_first, chunk_last, comp);
-                                 }
+                             [&comp, sortfunc] (RandIt chunk_first, RandIt chunk_last) {
+                                 sortfunc(chunk_first, chunk_last, comp);
                                  return std::make_pair(chunk_first, chunk_last);
                              });
 

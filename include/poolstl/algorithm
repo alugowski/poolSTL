@@ -221,7 +221,8 @@ namespace std {
             return;
         }
 
-        poolstl::internal::parallel_sort(std::forward<ExecPolicy>(policy), first, last, comp, false);
+        poolstl::internal::parallel_sort(std::forward<ExecPolicy>(policy), first, last, comp,
+                                         std::sort<RandIt, Compare>);
     }
 
     /**
@@ -247,7 +248,8 @@ namespace std {
             return;
         }
 
-        poolstl::internal::parallel_sort(std::forward<ExecPolicy>(policy), first, last, comp, true);
+        poolstl::internal::parallel_sort(std::forward<ExecPolicy>(policy), first, last, comp,
+                                         std::stable_sort<RandIt, Compare>);
     }
 
     /**

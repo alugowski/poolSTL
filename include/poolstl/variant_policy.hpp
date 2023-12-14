@@ -3,10 +3,54 @@
 // the BSD 2-clause license, the MIT license, or at your choosing the BSL-1.0 license found in the LICENSE.*.txt files.
 // SPDX-License-Identifier: BSD-2-Clause OR MIT OR BSL-1.0
 
-#ifndef POOLSTL_SEQ_FWD_HPP
-#define POOLSTL_SEQ_FWD_HPP
+#ifndef POOLSTL_VARIANT_POLICY_HPP
+#define POOLSTL_VARIANT_POLICY_HPP
 
 #include "execution"
+
+#include <variant>
+
+namespace poolstl {
+    namespace execution {
+        /**
+         * A policy that allows selecting a policy at runtime.
+         *
+         * @tparam Variant std::variant<> of policy options.
+         */
+        template <typename Variant>
+        struct variant_policy {
+            explicit variant_policy(const Variant& policy): var(policy) {}
+            Variant var;
+        };
+
+        namespace internal {
+            using poolstl_policy_variant = std::variant<
+                poolstl::execution::parallel_policy,
+                poolstl::execution::sequenced_policy>;
+        }
+    }
+
+    using execution::variant_policy;
+
+    namespace internal {
+        /**
+         * Helper for enable_if_poolstl_variant
+         */
+        template <typename T> struct is_poolstl_variant_policy : std::false_type {};
+        template <typename V> struct is_poolstl_variant_policy<
+            ::poolstl::execution::variant_policy<V>> :std::true_type {};
+
+        /**
+         * To enable/disable variant_policy (for par_if) overload resolution
+         */
+        template <class ExecPolicy, class Tp>
+        using enable_if_poolstl_variant =
+            typename std::enable_if<
+                is_poolstl_variant_policy<
+                    typename std::remove_cv<typename std::remove_reference<ExecPolicy>::type>::type>::value,
+                Tp>::type;
+    }
+}
 
 /*
  * Forward poolstl::seq to the native sequential (no policy) method.

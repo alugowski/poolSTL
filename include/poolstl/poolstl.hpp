@@ -15,7 +15,6 @@
 #include "execution"
 #include "algorithm"
 #include "numeric"
-#include "seq_fwd.hpp"
 
 // Note that iota_iter.hpp is self-contained in its own right.
 #include "iota_iter.hpp"

@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: BSD-2-Clause OR MIT OR BSL-1.0
 
 #include <iostream>
-#include <numeric>
+#include <string>
 #include <variant>
 
 // The <execution> header defines compiler-provided execution policies, but is not always present.
@@ -21,6 +21,10 @@
 #define POOLSTL_STD_SUPPLEMENT
 #include <poolstl/poolstl.hpp>
 
+#ifndef POOLSTL_AMALGAM
+// Test poolstl::variant_policy.
+// Not bundled with the amalgam.
+#include <poolstl/variant_policy.hpp>
 using std_policy_variant = std::variant<std::execution::parallel_policy, std::execution::sequenced_policy>;
 
 /**
@@ -33,6 +37,7 @@ poolstl::variant_policy<std_policy_variant> std_par_if(bool call_par) {
         return poolstl::variant_policy(std_policy_variant(std::execution::seq));
     }
 }
+#endif
 
 int main() {
     if (std::is_same_v<std::execution::parallel_policy, poolstl::execution::parallel_policy>) {
@@ -45,24 +50,26 @@ int main() {
     std::for_each(std::execution::seq, v.cbegin(), v.cend(), [](int x) {
         std::cout << x;
     });
-    std::cout << std::endl;
+    std::cout << " std::execution::seq" << std::endl;
 
     std::for_each(std::execution::par, v.cbegin(), v.cend(), [](int x) {
         std::cout << x;
     });
-    std::cout << std::endl;
+    std::cout << " std::execution::par" << std::endl;
 
     std::for_each(std::execution::par_unseq, v.cbegin(), v.cend(), [](int x) {
         std::cout << x;
     });
-    std::cout << std::endl;
+    std::cout << " std::execution::par_unseq" << std::endl;
 
+#ifndef POOLSTL_AMALGAM
     for (bool is_parallel : {true, false}) {
         std::for_each(std_par_if(is_parallel), v.cbegin(), v.cend(), [](int x) {
             std::cout << x;
         });
-        std::cout << std::endl;
+        std::cout << " std_par_if(" << std::to_string(is_parallel) << ")" << std::endl;
     }
+#endif
 
     return 0;
 }

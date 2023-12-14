@@ -15,10 +15,6 @@
 #include "internal/task_thread_pool.hpp"
 #include "internal/utils.hpp"
 
-#if POOLSTL_HAVE_CXX17
-#include <variant>
-#endif
-
 namespace poolstl {
 
     namespace ttp = task_thread_pool;
@@ -124,27 +120,6 @@ namespace poolstl {
             bool par_ok = true;
         };
 
-
-#if POOLSTL_HAVE_CXX17
-        /**
-         * A policy that allows selecting a policy at runtime.
-         *
-         * @tparam Variant std::variant<> of policy options.
-         */
-        template <typename Variant>
-        struct variant_policy {
-            explicit variant_policy(const Variant& policy): var(policy) {}
-            Variant var;
-        };
-
-        namespace internal {
-            using poolstl_policy_variant = std::variant<
-                poolstl::execution::parallel_policy,
-                poolstl::execution::sequenced_policy>;
-        }
-
-#endif
-
         /**
          * Choose parallel or sequential at runtime.
          *
@@ -180,9 +155,6 @@ namespace poolstl {
     using execution::seq;
     using execution::par;
     using execution::par_if;
-#if POOLSTL_HAVE_CXX17
-    using execution::variant_policy;
-#endif
 
     namespace internal {
         /**
@@ -223,25 +195,6 @@ namespace poolstl {
         template <class ExecPolicy>
         using is_pure_threads_policy = std::is_same<poolstl::execution::pure_threads_policy,
             typename std::remove_cv<typename std::remove_reference<ExecPolicy>::type>::type>;
-
-#if POOLSTL_HAVE_CXX17
-        /**
-         * Helper for enable_if_poolstl_variant
-         */
-        template <typename T> struct is_poolstl_variant_policy : std::false_type {};
-        template <typename V> struct is_poolstl_variant_policy<
-            ::poolstl::execution::variant_policy<V>> :std::true_type {};
-
-        /**
-         * To enable/disable variant_policy (for par_if) overload resolution
-         */
-        template <class ExecPolicy, class Tp>
-        using enable_if_poolstl_variant =
-            typename std::enable_if<
-                is_poolstl_variant_policy<
-                    typename std::remove_cv<typename std::remove_reference<ExecPolicy>::type>::type>::value,
-                Tp>::type;
-#endif
     }
 }
 

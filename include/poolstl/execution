@@ -9,6 +9,7 @@
 
 #include <memory>
 #include <mutex>
+#include <stdexcept>
 #include <type_traits>
 
 #include "internal/task_thread_pool.hpp"
@@ -46,8 +47,8 @@ namespace poolstl {
          */
         struct sequenced_policy : public poolstl_policy {
             POOLSTL_NO_DISCARD ttp::task_thread_pool* pool() const {
-                // never called
-                return nullptr;
+                // never called, but must exist for C++11 support
+                throw std::runtime_error("poolSTL: requested thread pool for seq policy.");
             }
 
             POOLSTL_NO_DISCARD bool par_allowed() const {

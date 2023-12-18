@@ -71,6 +71,14 @@ add_executable(cpp11_test cpp11_test.cpp)
 target_link_libraries(cpp11_test PUBLIC poolSTL::poolSTL)
 target_compile_features(cpp11_test PUBLIC cxx_std_11)
 
+# Test seq_fwd policy
+add_executable(seq_fwd_test seq_fwd_test.cpp)
+target_link_libraries(seq_fwd_test PRIVATE Catch2::Catch2WithMain poolSTL::poolSTL)
+target_compile_definitions(seq_fwd_test PRIVATE CATCH_CONFIG_FAST_COMPILE)
+target_compile_features(seq_fwd_test PUBLIC cxx_std_17)
+catch_discover_tests(seq_fwd_test)
+
+
 # Test std::execution supplementation.
 # The test code uses only std::execution::par, seq, and par_unseq.
 # On compilers with support poolSTL does nothing, else poolSTL aliases poolstl::par to the std::execution policies.

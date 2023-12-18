@@ -84,6 +84,3 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef POOLSTL_AMALGAM
-#define POOLSTL_AMALGAM
-#endif

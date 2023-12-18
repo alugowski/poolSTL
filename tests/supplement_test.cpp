@@ -21,14 +21,13 @@
 #define POOLSTL_STD_SUPPLEMENT
 #include <poolstl/poolstl.hpp>
 
-#ifndef POOLSTL_AMALGAM
-// Test poolstl::variant_policy.
-// Not bundled with the amalgam.
+#if __has_include(<poolstl/variant_policy.hpp>)
+// Test poolstl::variant_policy (independent header, not bundled with the amalgam).
 #include <poolstl/variant_policy.hpp>
 using std_policy_variant = std::variant<std::execution::parallel_policy, std::execution::sequenced_policy>;
 
 /**
- * A version of poolstl::par_if that works on the std execution policies.
+ * A version of poolstl::par_if that works on the std::execution policies.
  */
 poolstl::variant_policy<std_policy_variant> std_par_if(bool call_par) {
     if (call_par) {
@@ -62,7 +61,7 @@ int main() {
     });
     std::cout << " std::execution::par_unseq" << std::endl;
 
-#ifndef POOLSTL_AMALGAM
+#if __has_include(<poolstl/variant_policy.hpp>)
     for (bool is_parallel : {true, false}) {
         std::for_each(std_par_if(is_parallel), v.cbegin(), v.cend(), [](int x) {
             std::cout << x;

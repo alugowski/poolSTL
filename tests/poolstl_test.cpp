@@ -517,12 +517,10 @@ TEST_CASE("execution_policies", "[execution]") {
     REQUIRE(1 == std::count(poolstl::par, v.cbegin(), v.cend(), 5));
     REQUIRE(1 == std::count(poolstl::par.on(pool), v.cbegin(), v.cend(), 5));
     REQUIRE(1 == std::count(poolstl::seq, v.cbegin(), v.cend(), 5));
-#if POOLSTL_HAVE_CXX17
     REQUIRE(1 == std::count(poolstl::par_if(false), v.cbegin(), v.cend(), 5));
     REQUIRE(1 == std::count(poolstl::par_if(true), v.cbegin(), v.cend(), 5));
     REQUIRE(1 == std::count(poolstl::par_if(false, pool), v.cbegin(), v.cend(), 5));
     REQUIRE(1 == std::count(poolstl::par_if(true, pool), v.cbegin(), v.cend(), 5));
-#endif
 }
 
 TEST_CASE("iota_iter(use)", "[iterator]") {

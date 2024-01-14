@@ -13,6 +13,9 @@
 
 #include "utils.hpp"
 
+// for testing pluggable sort
+#include "thirdparty/pdqsort.h"
+
 namespace ttp = task_thread_pool;
 using poolstl::iota_iter;
 
@@ -294,7 +297,7 @@ TEST_CASE("sort", "[alg][algorithm]") {
                     default: break;
                 }
 
-                for (auto which_impl : {0, 1}) {
+                for (auto which_impl : {0, 1, 2, 3, 4, 5}) {
                     std::vector<int> dest1(source);
                     std::vector<int> dest2(source);
 
@@ -306,6 +309,17 @@ TEST_CASE("sort", "[alg][algorithm]") {
                         case 1:
                             std::sort(poolstl::par.on(pool), dest2.begin(), dest2.end());
                             break;
+                        case 2:
+                            poolstl::pluggable_sort(poolstl::par_if(false), dest2.begin(), dest2.end(), std::sort, std::inplace_merge);
+                            break;
+                        case 3:
+                            poolstl::pluggable_sort(poolstl::par.on(pool), dest2.begin(), dest2.end(), pdqsort);
+                            break;
+                        case 4:
+                            poolstl::pluggable_sort(poolstl::par.on(pool), dest2.begin(), dest2.end(), std::less<int>(), pdqsort_branchless);
+                            break;
+                        case 5:
+                            poolstl::pluggable_sort(poolstl::par.on(pool), dest2.begin(), dest2.end(), std::less<int>(), pdqsort_branchless, std::inplace_merge);
                         default:
                             break;
                     }

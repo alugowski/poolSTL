@@ -156,18 +156,20 @@ namespace poolstl {
         /**
          * Sort a range in parallel.
          *
-         * @param stable Whether to use std::stable_sort or std::sort
+         * @param sort_func Sequential sort method, like std::sort or std::stable_sort
+         * @param merge_func Sequential merge method, like std::inplace_merge
          */
-        template <class ExecPolicy, class RandIt, class Compare, class SortFunc>
-        void parallel_sort(ExecPolicy &&policy, RandIt first, RandIt last, Compare comp, SortFunc sortfunc) {
+        template <class ExecPolicy, class RandIt, class Compare, class SortFunc, class MergeFunc>
+        void parallel_sort(ExecPolicy &&policy, RandIt first, RandIt last,
+                           Compare comp, SortFunc sort_func, MergeFunc merge_func) {
             if (first == last) {
                 return;
             }
 
             // Sort chunks in parallel
             auto futures = parallel_chunk_for_gen(std::forward<ExecPolicy>(policy), first, last,
-                             [&comp, sortfunc] (RandIt chunk_first, RandIt chunk_last) {
-                                 sortfunc(chunk_first, chunk_last, comp);
+                             [&comp, sort_func] (RandIt chunk_first, RandIt chunk_last) {
+                                 sort_func(chunk_first, chunk_last, comp);
                                  return std::make_pair(chunk_first, chunk_last);
                              });
 
@@ -186,9 +188,10 @@ namespace poolstl {
                         // pair up and merge
                         auto& lhs = subranges[i];
                         auto& rhs = subranges[i + 1];
-                        futures.emplace_back(task_pool.submit([&comp] (RandIt chunk_first, RandIt chunk_middle,
-                                                                       RandIt chunk_last) {
-                            std::inplace_merge(chunk_first, chunk_middle, chunk_last, comp);
+                        futures.emplace_back(task_pool.submit([&comp, merge_func] (RandIt chunk_first,
+                                                                                   RandIt chunk_middle,
+                                                                                   RandIt chunk_last) {
+                            merge_func(chunk_first, chunk_middle, chunk_last, comp);
                             return std::make_pair(chunk_first, chunk_last);
                         }, lhs.first, lhs.second, rhs.second));
                         ++i;

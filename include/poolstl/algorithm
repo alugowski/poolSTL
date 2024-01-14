@@ -222,7 +222,7 @@ namespace std {
         }
 
         poolstl::internal::parallel_sort(std::forward<ExecPolicy>(policy), first, last, comp,
-                                         std::sort<RandIt, Compare>);
+                                         std::sort<RandIt, Compare>, std::inplace_merge<RandIt, Compare>);
     }
 
     /**
@@ -249,7 +249,7 @@ namespace std {
         }
 
         poolstl::internal::parallel_sort(std::forward<ExecPolicy>(policy), first, last, comp,
-                                         std::stable_sort<RandIt, Compare>);
+                                         std::stable_sort<RandIt, Compare>, std::inplace_merge<RandIt, Compare>);
     }
 
     /**
@@ -369,6 +369,42 @@ namespace poolstl {
         poolstl::internal::parallel_chunk_for_1_wait(std::forward<ExecPolicy>(policy), first, last,
                                                      for_each_chunk <RandIt, ChunkConstructor, UnaryFunction>,
                                                      (void*)nullptr, 1, construct, f);
+    }
+
+    /**
+     * NOTE: Iterators are expected to be random access.
+     *
+     * Like `std::sort`, but allows specifying the sequential sort and merge methods. These methods must have the
+     * same signature as the comparator versions of `std::sort` and `std::inplace_merge`, respectively.
+     */
+    template <class ExecPolicy, class RandIt, class Compare>
+    poolstl::internal::enable_if_poolstl_policy<ExecPolicy, void>
+    pluggable_sort(ExecPolicy &&policy, RandIt first, RandIt last, Compare comp,
+                   void (sort_func)(RandIt, RandIt, Compare) = std::sort,
+                   void (merge_func)(RandIt, RandIt, RandIt, Compare) = std::inplace_merge) {
+        if (poolstl::internal::is_seq<ExecPolicy>(policy)) {
+            sort_func(first, last, comp);
+            return;
+        }
+
+        poolstl::internal::parallel_sort(std::forward<ExecPolicy>(policy), first, last, comp, sort_func, merge_func);
+    }
+
+    /**
+     * NOTE: Iterators are expected to be random access.
+     *
+     * Like `std::sort`, but allows specifying the sequential sort and merge methods. These methods must have the
+     * same signature as the comparator versions of `std::sort` and `std::inplace_merge`, respectively.
+     */
+    template <class ExecPolicy, class RandIt>
+    poolstl::internal::enable_if_poolstl_policy<ExecPolicy, void>
+    pluggable_sort(ExecPolicy &&policy, RandIt first, RandIt last,
+                   void (sort_func)(RandIt, RandIt,
+                                    std::less<typename std::iterator_traits<RandIt>::value_type>) = std::sort,
+                   void (merge_func)(RandIt, RandIt, RandIt,
+                                    std::less<typename std::iterator_traits<RandIt>::value_type>) = std::inplace_merge){
+        using T = typename std::iterator_traits<RandIt>::value_type;
+        pluggable_sort(std::forward<ExecPolicy>(policy), first, last, std::less<T>(), sort_func, merge_func);
     }
 }
 

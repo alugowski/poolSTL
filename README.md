@@ -60,6 +60,7 @@ All in `std::` namespace.
 ### Other
 * [`poolstl::iota_iter`](include/poolstl/iota_iter.hpp) - Iterate over integers. Same as iterating over output of [`std::iota`](https://en.cppreference.com/w/cpp/algorithm/iota) but without materializing anything. Iterator version of [`std::ranges::iota_view`](https://en.cppreference.com/w/cpp/ranges/iota_view).
 * `poolstl::for_each_chunk` - Like `std::for_each`, but explicitly splits the input range into chunks then exposes the chunked parallelism. A user-specified chunk constructor is called for each parallel chunk then its output is passed to each loop iteration. Useful for workloads that need an expensive workspace that can be reused between iterations, but not simultaneously by all iterations in parallel.
+* `poolstl::pluggable_sort` - Like `std::sort`, but allows specification of sequential sort and merge methods. To parallelize [pdqsort](https://github.com/orlp/pdqsort): `pluggable_sort(par, v.begin(), v.end(), pdqsort)`.
 
 ## Usage
 

@@ -11,6 +11,7 @@
 
 #include "utils.hpp"
 #include <poolstl/algorithm>
+#include "../tests/thirdparty/pdqsort.h"
 
 ////////////////////////////////
 
@@ -115,6 +116,26 @@ BENCHMARK(sort<poolstl_par>)->Name("sort(poolstl::par)")->UseRealTime();
 #ifdef POOLSTL_BENCH_STD_PAR
 BENCHMARK(sort<std_par>)->Name("sort(std::execution::par)")->UseRealTime();
 #endif
+
+////////////////////////////////
+
+template <class ExecPolicy>
+void pluggable_sort_pdq(benchmark::State& state) {
+    auto source = random_vector<int>(arr_length / 10);
+
+    for ([[maybe_unused]] auto _ : state) {
+        state.PauseTiming();
+        std::vector<int> values(source);
+        state.ResumeTiming();
+
+        poolstl::pluggable_sort(policy<ExecPolicy>::get(), values.begin(), values.end(), pdqsort);
+
+        benchmark::DoNotOptimize(values);
+        benchmark::ClobberMemory();
+    }
+}
+
+BENCHMARK(pluggable_sort_pdq<poolstl_par>)->Name("pluggable_sort(poolstl::par, ..., pdqsort)")->UseRealTime();
 
 ////////////////////////////////
 

@@ -199,6 +199,7 @@ for_each(std::execution::par)/real_time                            15.3 ms      
 sort()/real_time                                                    603 ms          602 ms            1
 sort(poolstl::par)/real_time                                        146 ms        0.667 ms            5
 sort(std::execution::par)/real_time                                 121 ms         95.1 ms            6
+pluggable_sort(poolstl::par, ..., pdqsort)/real_time               97.7 ms        0.519 ms            7
 transform()/real_time                                              95.0 ms         94.9 ms            7
 transform(poolstl::par)/real_time                                  17.4 ms        0.037 ms           38
 transform(std::execution::par)/real_time                           15.3 ms         13.2 ms           45

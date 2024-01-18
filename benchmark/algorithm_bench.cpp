@@ -12,6 +12,7 @@
 #include "utils.hpp"
 #include <poolstl/algorithm>
 #include "../tests/thirdparty/pdqsort.h"
+#include "../tests/inplace_merge_without_buffer.hpp"
 
 ////////////////////////////////
 
@@ -95,6 +96,7 @@ BENCHMARK(for_each<std_par>)->Name("for_each(std::execution::par)")->UseRealTime
 template <class ExecPolicy>
 void sort(benchmark::State& state) {
     auto source = random_vector<int>(arr_length / 10);
+//    auto source = random_vector<int>(arr_length);
 
     for ([[maybe_unused]] auto _ : state) {
         state.PauseTiming();
@@ -119,23 +121,29 @@ BENCHMARK(sort<std_par>)->Name("sort(std::execution::par)")->UseRealTime();
 
 ////////////////////////////////
 
-template <class ExecPolicy>
+template <class ExecPolicy, int which_impl>
 void pluggable_sort_pdq(benchmark::State& state) {
     auto source = random_vector<int>(arr_length / 10);
+//    auto source = random_vector<int>(arr_length);
 
     for ([[maybe_unused]] auto _ : state) {
         state.PauseTiming();
         std::vector<int> values(source);
         state.ResumeTiming();
 
-        poolstl::pluggable_sort(policy<ExecPolicy>::get(), values.begin(), values.end(), pdqsort);
+        if constexpr (which_impl == 1) {
+            poolstl::pluggable_sort(policy<ExecPolicy>::get(), values.begin(), values.end(), pdqsort);
+        } else if constexpr (which_impl == 2) {
+            poolstl::pluggable_sort(policy<ExecPolicy>::get(), values.begin(), values.end(), pdqsort, adapted_pipm_inplace_merge);
+        }
 
         benchmark::DoNotOptimize(values);
         benchmark::ClobberMemory();
     }
 }
 
-BENCHMARK(pluggable_sort_pdq<poolstl_par>)->Name("pluggable_sort(poolstl::par, ..., pdqsort)")->UseRealTime();
+BENCHMARK(pluggable_sort_pdq<poolstl_par, 1>)->Name("pluggable_sort(poolstl::par, ..., pdqsort)")->UseRealTime(); // uses pdqsort and std::inplace_merge (O(n) extra memory)
+BENCHMARK(pluggable_sort_pdq<poolstl_par, 2>)->Name("pluggable_sort(poolstl::par, ..., pdqsort, pipm_merge)")->UseRealTime(); // uses pdqsort and adapted_pipm_inplace_merge (O(1) extra memory)
 
 ////////////////////////////////
 

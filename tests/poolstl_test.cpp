@@ -15,6 +15,7 @@
 
 // for testing pluggable sort
 #include "thirdparty/pdqsort.h"
+#include "inplace_merge_without_buffer.hpp"
 
 namespace ttp = task_thread_pool;
 using poolstl::iota_iter;
@@ -284,6 +285,42 @@ TEST_CASE("for_each_chunk", "[alg][algorithm][poolstl]") {
     }
 }
 
+TEST_CASE("inplace_merge", "[alg][algorithm]") {
+    std::vector<int> arr_sizes(150);
+    std::iota(arr_sizes.begin(), arr_sizes.end(), 1);
+
+    for (auto num_iters : arr_sizes) { //test_arr_sizes) {
+        for (int scramble_type = 0; scramble_type <= 2; ++scramble_type) {
+            auto source = iota_vector(num_iters);
+            std::vector<int> dest(source);
+            switch (scramble_type) {
+                case 0: std::reverse(source.begin(), source.end()); break;
+                case 1: scramble(source); break;
+                default: break;
+            }
+
+            std::vector<int> midpoints(num_iters);
+            std::iota(midpoints.begin(), midpoints.end(), 0);
+            for (auto mid : midpoints) {
+                std::sort(source.begin(), source.begin() + mid);
+                std::sort(source.begin() + mid, source.end());
+
+//                {
+//                    std::vector<int> work(source);
+//                    std::inplace_merge(work.begin(), work.begin() + mid, work.end(), std::less<int>());
+//                    REQUIRE(work == dest);
+//                }
+
+                {
+                    std::vector<int> work(source);
+                    adapted_pipm_inplace_merge(work.begin(), work.begin() + mid, work.end(), std::less<int>());
+                    REQUIRE(work == dest);
+                }
+            }
+        }
+    }
+}
+
 TEST_CASE("sort", "[alg][algorithm]") {
     for (auto num_threads : test_thread_counts) {
         ttp::task_thread_pool pool(num_threads);
@@ -319,7 +356,7 @@ TEST_CASE("sort", "[alg][algorithm]") {
                             poolstl::pluggable_sort(poolstl::par.on(pool), dest2.begin(), dest2.end(), std::less<int>(), pdqsort_branchless);
                             break;
                         case 5:
-                            poolstl::pluggable_sort(poolstl::par.on(pool), dest2.begin(), dest2.end(), std::less<int>(), pdqsort_branchless, std::inplace_merge);
+                            poolstl::pluggable_sort(poolstl::par.on(pool), dest2.begin(), dest2.end(), std::less<int>(), pdqsort_branchless, adapted_pipm_inplace_merge);
                         default:
                             break;
                     }

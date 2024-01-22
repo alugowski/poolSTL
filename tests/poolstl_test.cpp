@@ -334,34 +334,48 @@ TEST_CASE("sort", "[alg][algorithm]") {
                     default: break;
                 }
 
-                for (auto which_impl : {0, 1, 2, 3, 4, 5}) {
-                    std::vector<int> dest1(source);
-                    std::vector<int> dest2(source);
+                std::vector<int> dest1(source);
+                std::sort(dest1.begin(), dest1.end());
 
-                    std::sort(dest1.begin(), dest1.end());
-                    switch (which_impl) {
-                        case 0:
-                            std::sort(poolstl::par_if(false), dest2.begin(), dest2.end());
-                            break;
-                        case 1:
-                            std::sort(poolstl::par.on(pool), dest2.begin(), dest2.end());
-                            break;
-                        case 2:
-                            poolstl::pluggable_sort(poolstl::par_if(false), dest2.begin(), dest2.end(), std::sort, std::inplace_merge);
-                            break;
-                        case 3:
-                            poolstl::pluggable_sort(poolstl::par.on(pool), dest2.begin(), dest2.end(), pdqsort);
-                            break;
-                        case 4:
-                            poolstl::pluggable_sort(poolstl::par.on(pool), dest2.begin(), dest2.end(), std::less<int>(), pdqsort_branchless);
-                            break;
-                        case 5:
-                            poolstl::pluggable_sort(poolstl::par.on(pool), dest2.begin(), dest2.end(), std::less<int>(), pdqsort_branchless, adapted_pipm_inplace_merge);
-                        default:
-                            break;
-                    }
-
-                    REQUIRE(dest1 == dest2);
+                {
+                    std::vector<int> work(source);
+                    std::sort(poolstl::par_if(false), work.begin(), work.end());
+                    REQUIRE(dest1 == work);
+                }
+                {
+                    std::vector<int> work(source);
+                    std::sort(poolstl::par.on(pool), work.begin(), work.end());
+                    REQUIRE(dest1 == work);
+                }
+                {
+                    std::vector<int> work(source);
+                    poolstl::pluggable_sort(poolstl::par.on(pool), work.begin(), work.end(), pdqsort);
+                    REQUIRE(dest1 == work);
+                }
+                {
+                    std::vector<int> work(source);
+                    poolstl::pluggable_mergesort(poolstl::par_if(false), work.begin(), work.end(), std::sort, std::inplace_merge);
+                    REQUIRE(dest1 == work);
+                }
+                {
+                    std::vector<int> work(source);
+                    poolstl::pluggable_mergesort(poolstl::par.on(pool), work.begin(), work.end(), std::less<int>(), pdqsort_branchless);
+                    REQUIRE(dest1 == work);
+                }
+                {
+                    std::vector<int> work(source);
+                    poolstl::pluggable_mergesort(poolstl::par.on(pool), work.begin(), work.end(), std::less<int>(), pdqsort_branchless, adapted_pipm_inplace_merge);
+                    REQUIRE(dest1 == work);
+                }
+                {
+                    std::vector<int> work(source);
+                    poolstl::pluggable_quicksort(poolstl::par.on(pool), work.begin(), work.end(), pdqsort);
+                    REQUIRE(dest1 == work);
+                }
+                {
+                    std::vector<int> work(source);
+                    poolstl::pluggable_quicksort(poolstl::par.on(pool), work.begin(), work.end(), std::less<int>(), pdqsort_branchless);
+                    REQUIRE(dest1 == work);
                 }
             }
         }
@@ -386,23 +400,23 @@ TEST_CASE("stable_sort", "[alg][algorithm]") {
                     default: break;
                 }
 
-                for (auto which_impl : {0, 1}) {
-                    std::vector<stable_sort_element> dest1(source);
-                    std::vector<stable_sort_element> dest2(source);
+                std::vector<stable_sort_element> dest1(source);
+                std::stable_sort(dest1.begin(), dest1.end());
 
-                    std::sort(dest1.begin(), dest1.end());
-                    switch (which_impl) {
-                        case 0:
-                            std::stable_sort(poolstl::par_if(false), dest2.begin(), dest2.end());
-                            break;
-                        case 1:
-                            std::stable_sort(poolstl::par.on(pool), dest2.begin(), dest2.end());
-                            break;
-                        default:
-                            break;
-                    }
-
-                    REQUIRE(dest1 == dest2);
+                {
+                    std::vector<stable_sort_element> work(source);
+                    std::stable_sort(poolstl::par_if(false), work.begin(), work.end());
+                    REQUIRE(dest1 == work);
+                }
+                {
+                    std::vector<stable_sort_element> work(source);
+                    std::stable_sort(poolstl::par.on(pool), work.begin(), work.end());
+                    REQUIRE(dest1 == work);
+                }
+                {
+                    std::vector<stable_sort_element> work(source);
+                    poolstl::pluggable_quicksort(poolstl::par.on(pool), work.begin(), work.end(), std::stable_sort, std::stable_partition);
+                    REQUIRE(dest1 == work);
                 }
             }
         }

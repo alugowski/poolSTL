@@ -101,6 +101,28 @@ namespace poolstl {
             }
         }
 
+        /**
+         * Identify a pivot element for quicksort. Chooses the middle element of the range.
+         */
+        template <typename Iterator>
+        typename std::iterator_traits<Iterator>::value_type quicksort_pivot(Iterator first, Iterator last) {
+            return *(std::next(first, std::distance(first, last) / 2));
+        }
+
+        /**
+         * Predicate for std::partition (for quicksort)
+         */
+        template <class Compare, class T>
+        struct pivot_predicate {
+            pivot_predicate(Compare comp, const T& pivot) : comp(comp), pivot(pivot) {}
+
+            bool operator()(const T& em) {
+                return comp(em, pivot);
+            }
+            Compare comp;
+            const T pivot;
+        };
+
         /*
          * Some methods are only available with C++17 and up. Reimplement on older standards.
          */

@@ -122,7 +122,7 @@ BENCHMARK(sort<std_par>)->Name("sort(std::execution::par)")->UseRealTime();
 ////////////////////////////////
 
 template <class ExecPolicy, int which_impl>
-void pluggable_sort_pdq(benchmark::State& state) {
+void pluggable_sort(benchmark::State& state) {
     auto source = random_vector<int>(arr_length / 10);
 //    auto source = random_vector<int>(arr_length);
 
@@ -134,7 +134,12 @@ void pluggable_sort_pdq(benchmark::State& state) {
         if constexpr (which_impl == 1) {
             poolstl::pluggable_sort(policy<ExecPolicy>::get(), values.begin(), values.end(), pdqsort);
         } else if constexpr (which_impl == 2) {
-            poolstl::pluggable_sort(policy<ExecPolicy>::get(), values.begin(), values.end(), pdqsort, adapted_pipm_inplace_merge);
+            poolstl::pluggable_mergesort(policy<ExecPolicy>::get(), values.begin(), values.end(), pdqsort);
+        } else if constexpr (which_impl == 3) {
+            poolstl::pluggable_mergesort(policy<ExecPolicy>::get(), values.begin(), values.end(), pdqsort, adapted_pipm_inplace_merge);
+        } else if constexpr (which_impl == 4) {
+            // pluggable_sort delegates to this, so essentially same as which_impl==1
+            poolstl::pluggable_quicksort(policy<ExecPolicy>::get(), values.begin(), values.end(), pdqsort);
         }
 
         benchmark::DoNotOptimize(values);
@@ -142,8 +147,9 @@ void pluggable_sort_pdq(benchmark::State& state) {
     }
 }
 
-BENCHMARK(pluggable_sort_pdq<poolstl_par, 1>)->Name("pluggable_sort(poolstl::par, ..., pdqsort)")->UseRealTime(); // uses pdqsort and std::inplace_merge (O(n) extra memory)
-BENCHMARK(pluggable_sort_pdq<poolstl_par, 2>)->Name("pluggable_sort(poolstl::par, ..., pdqsort, pipm_merge)")->UseRealTime(); // uses pdqsort and adapted_pipm_inplace_merge (O(1) extra memory)
+BENCHMARK(pluggable_sort<poolstl_par, 1>)->Name("pluggable_sort(poolstl::par, ..., pdqsort)")->UseRealTime(); // uses pdqsort
+//BENCHMARK(pluggable_sort<poolstl_par, 2>)->Name("pluggable_mergesort(poolstl::par, ..., pdqsort)")->UseRealTime(); // uses pdqsort and std::inplace_merge (O(n) extra memory)
+//BENCHMARK(pluggable_sort<poolstl_par, 3>)->Name("pluggable_mergesort(poolstl::par, ..., pdqsort, pipm_merge)")->UseRealTime(); // uses pdqsort and adapted_pipm_inplace_merge (slower, but O(1) extra memory)
 
 ////////////////////////////////
 

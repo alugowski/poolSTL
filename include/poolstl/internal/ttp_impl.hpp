@@ -160,8 +160,8 @@ namespace poolstl {
          * @param merge_func Sequential merge method, like std::inplace_merge
          */
         template <class ExecPolicy, class RandIt, class Compare, class SortFunc, class MergeFunc>
-        void parallel_sort(ExecPolicy &&policy, RandIt first, RandIt last,
-                           Compare comp, SortFunc sort_func, MergeFunc merge_func) {
+        void parallel_mergesort(ExecPolicy &&policy, RandIt first, RandIt last,
+                                Compare comp, SortFunc sort_func, MergeFunc merge_func) {
             if (first == last) {
                 return;
             }
@@ -206,6 +206,103 @@ namespace poolstl {
                 subranges.clear();
             } while (futures.size() > 1);
             futures.front().get();
+        }
+
+        /**
+         * Quicksort worker function.
+         */
+        template <class RandIt, class Compare, class SortFunc, class PartFunc, class PivotFunc>
+        void quicksort_impl(task_thread_pool::task_thread_pool* task_pool, const RandIt first, const RandIt last,
+                            Compare comp, SortFunc sort_func, PartFunc part_func, PivotFunc pivot_func,
+                            std::ptrdiff_t target_leaf_size,
+                            std::vector<std::future<void>>* futures, std::mutex* mutex,
+                            std::condition_variable* cv, int* inflight_spawns) {
+            using T = typename std::iterator_traits<RandIt>::value_type;
+
+            auto partition_size = std::distance(first, last);
+
+            if (partition_size > target_leaf_size) {
+                // partition the range
+                auto mid = part_func(first, last, pivot_predicate<Compare, T>(comp, pivot_func(first, last)));
+
+                if (mid != first && mid != last) {
+                    // was able to partition the range, so recurse
+                    std::lock_guard<std::mutex> guard(*mutex);
+                    ++(*inflight_spawns);
+
+                    futures->emplace_back(task_pool->submit(
+                        quicksort_impl<RandIt, Compare, SortFunc, PartFunc, PivotFunc>,
+                        task_pool, first, mid, comp, sort_func, part_func, pivot_func, target_leaf_size,
+                        futures, mutex, cv, inflight_spawns));
+
+                    futures->emplace_back(task_pool->submit(
+                        quicksort_impl<RandIt, Compare, SortFunc, PartFunc, PivotFunc>,
+                        task_pool, mid, last, comp, sort_func, part_func, pivot_func, target_leaf_size,
+                        futures, mutex, cv, inflight_spawns));
+                    return;
+                }
+            }
+
+            // Range does not need to be subdivided (or was unable to subdivide). Run the sequential sort.
+            {
+                // notify main thread that partitioning may be finished
+                std::lock_guard<std::mutex> guard(*mutex);
+                --(*inflight_spawns);
+            }
+            cv->notify_one();
+
+            sort_func(first, last, comp);
+        }
+
+        /**
+         * Sort a range in parallel using quicksort.
+         *
+         * @param sort_func Sequential sort method, like std::sort or std::stable_sort
+         * @param part_func Method that partitions a range, like std::partition or std::stable_partition
+         * @param pivot_func Method that identifies the pivot
+         */
+        template <class ExecPolicy, class RandIt, class Compare, class SortFunc, class PartFunc, class PivotFunc>
+        void parallel_quicksort(ExecPolicy &&policy, RandIt first, RandIt last,
+                                Compare comp, SortFunc sort_func, PartFunc part_func, PivotFunc pivot_func) {
+            if (first == last) {
+                return;
+            }
+
+            auto& task_pool = *policy.pool();
+
+            // Target partition size. Range will be recursively partitioned into partitions no bigger than this
+            // size. Target approximately twice as many partitions as threads to reduce impact of uneven pivot
+            // selection.
+            std::ptrdiff_t target_leaf_size = std::max(std::distance(first, last) / (task_pool.get_num_threads() * 2),
+                                                       (std::ptrdiff_t)5);
+
+            // task_thread_pool does not support creating task DAGs, so organize the code such that
+            // all parallel tasks are independent. The parallel tasks can spawn additional parallel tasks, and they
+            // record their "child" task's std::future into a common vector to be waited on by the main thread.
+            std::mutex mutex;
+
+            // Futures of parallel tasks. Access protected by mutex.
+            std::vector<std::future<void>> futures;
+
+            // For signaling that all partitioning has been completed and futures vector is complete. Uses mutex.
+            std::condition_variable cv;
+
+            // Number of `quicksort_impl` calls that haven't finished yet. Nonzero value means futures vector may
+            // still be modified. Access protected by mutex.
+            int inflight_spawns = 1;
+
+            // Root task.
+            quicksort_impl(&task_pool, first, last, comp, sort_func, part_func, pivot_func, target_leaf_size,
+                           &futures, &mutex, &cv, &inflight_spawns);
+
+            // Wait for all partitioning to finish.
+            {
+                std::unique_lock<std::mutex> lock(mutex);
+                cv.wait(lock, [&] { return inflight_spawns == 0; });
+            }
+
+            // Wait on all the parallel tasks.
+            get_futures(futures);
         }
     }
 }

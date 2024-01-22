@@ -60,7 +60,7 @@ All in `std::` namespace.
 ### Other
 * [`poolstl::iota_iter`](include/poolstl/iota_iter.hpp) - Iterate over integers. Same as iterating over output of [`std::iota`](https://en.cppreference.com/w/cpp/algorithm/iota) but without materializing anything. Iterator version of [`std::ranges::iota_view`](https://en.cppreference.com/w/cpp/ranges/iota_view).
 * `poolstl::for_each_chunk` - Like `std::for_each`, but explicitly splits the input range into chunks then exposes the chunked parallelism. A user-specified chunk constructor is called for each parallel chunk then its output is passed to each loop iteration. Useful for workloads that need an expensive workspace that can be reused between iterations, but not simultaneously by all iterations in parallel.
-* `poolstl::pluggable_sort` - Like `std::sort`, but allows specification of sequential sort and merge methods. To parallelize [pdqsort](https://github.com/orlp/pdqsort): `pluggable_sort(par, v.begin(), v.end(), pdqsort)`.
+* `poolstl::pluggable_sort` - Like `std::sort`, but allows specification of sequential sort method. To parallelize [pdqsort](https://github.com/orlp/pdqsort): `pluggable_sort(par, v.begin(), v.end(), pdqsort)`.
 
 ## Usage
 
@@ -197,9 +197,9 @@ for_each()/real_time                                               94.6 ms      
 for_each(poolstl::par)/real_time                                   18.7 ms        0.044 ms           36
 for_each(std::execution::par)/real_time                            15.3 ms         12.9 ms           46
 sort()/real_time                                                    603 ms          602 ms            1
-sort(poolstl::par)/real_time                                        146 ms        0.667 ms            5
-sort(std::execution::par)/real_time                                 121 ms         95.1 ms            6
-pluggable_sort(poolstl::par, ..., pdqsort)/real_time               97.7 ms        0.519 ms            7
+sort(poolstl::par)/real_time                                        137 ms         11.8 ms            5
+sort(std::execution::par)/real_time                                 113 ms          102 ms            6
+pluggable_sort(poolstl::par, ..., pdqsort)/real_time               91.8 ms         11.9 ms            7
 transform()/real_time                                              95.0 ms         94.9 ms            7
 transform(poolstl::par)/real_time                                  17.4 ms        0.037 ms           38
 transform(std::execution::par)/real_time                           15.3 ms         13.2 ms           45

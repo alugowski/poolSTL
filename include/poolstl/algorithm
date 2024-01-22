@@ -221,8 +221,11 @@ namespace std {
             return;
         }
 
-        poolstl::internal::parallel_sort(std::forward<ExecPolicy>(policy), first, last, comp,
-                                         std::sort<RandIt, Compare>, std::inplace_merge<RandIt, Compare>);
+        poolstl::internal::parallel_quicksort(std::forward<ExecPolicy>(policy), first, last, comp,
+                                              std::sort<RandIt, Compare>,
+                                              std::partition<RandIt, poolstl::internal::pivot_predicate<Compare,
+                                                  typename std::iterator_traits<RandIt>::value_type>>,
+                                              poolstl::internal::quicksort_pivot<RandIt>);
     }
 
     /**
@@ -248,8 +251,11 @@ namespace std {
             return;
         }
 
-        poolstl::internal::parallel_sort(std::forward<ExecPolicy>(policy), first, last, comp,
-                                         std::stable_sort<RandIt, Compare>, std::inplace_merge<RandIt, Compare>);
+        poolstl::internal::parallel_quicksort(std::forward<ExecPolicy>(policy), first, last, comp,
+                                              std::stable_sort<RandIt, Compare>,
+                                              std::stable_partition<RandIt, poolstl::internal::pivot_predicate<Compare,
+                                                  typename std::iterator_traits<RandIt>::value_type>>,
+                                              poolstl::internal::quicksort_pivot<RandIt>);
     }
 
     /**
@@ -374,37 +380,142 @@ namespace poolstl {
     /**
      * NOTE: Iterators are expected to be random access.
      *
-     * Like `std::sort`, but allows specifying the sequential sort and merge methods. These methods must have the
-     * same signature as the comparator versions of `std::sort` and `std::inplace_merge`, respectively.
+     * Like `std::sort`, but allows specifying the sequential sort method, which must have the
+     * same signature as the comparator version of `std::sort`.
+     *
+     * Implemented as a high-level quicksort that delegates to `sort_func`, in parallel, once the range has been
+     * sufficiently partitioned.
      */
     template <class ExecPolicy, class RandIt, class Compare>
     poolstl::internal::enable_if_poolstl_policy<ExecPolicy, void>
     pluggable_sort(ExecPolicy &&policy, RandIt first, RandIt last, Compare comp,
-                   void (sort_func)(RandIt, RandIt, Compare) = std::sort,
-                   void (merge_func)(RandIt, RandIt, RandIt, Compare) = std::inplace_merge) {
+                   void (sort_func)(RandIt, RandIt, Compare) = std::sort) {
         if (poolstl::internal::is_seq<ExecPolicy>(policy)) {
             sort_func(first, last, comp);
             return;
         }
 
-        poolstl::internal::parallel_sort(std::forward<ExecPolicy>(policy), first, last, comp, sort_func, merge_func);
+        poolstl::internal::parallel_quicksort(std::forward<ExecPolicy>(policy), first, last, comp, sort_func,
+                                              std::partition<RandIt, poolstl::internal::pivot_predicate<Compare,
+                                                  typename std::iterator_traits<RandIt>::value_type>>,
+                                              poolstl::internal::quicksort_pivot<RandIt>);
     }
 
     /**
      * NOTE: Iterators are expected to be random access.
      *
-     * Like `std::sort`, but allows specifying the sequential sort and merge methods. These methods must have the
-     * same signature as the comparator versions of `std::sort` and `std::inplace_merge`, respectively.
+     * Like `std::sort`, but allows specifying the sequential sort method, which must have the
+     * same signature as the comparator version of `std::sort`.
+     *
+     * Implemented as a parallel high-level quicksort that delegates to `sort_func` once the range has been
+     * sufficiently partitioned.
      */
     template <class ExecPolicy, class RandIt>
     poolstl::internal::enable_if_poolstl_policy<ExecPolicy, void>
     pluggable_sort(ExecPolicy &&policy, RandIt first, RandIt last,
                    void (sort_func)(RandIt, RandIt,
+                                    std::less<typename std::iterator_traits<RandIt>::value_type>) = std::sort){
+        using T = typename std::iterator_traits<RandIt>::value_type;
+        pluggable_sort(std::forward<ExecPolicy>(policy), first, last, std::less<T>(), sort_func);
+    }
+
+    /**
+     * NOTE: Iterators are expected to be random access.
+     *
+     * Parallel merge sort.
+     *
+     * @param comp Comparator.
+     * @param sort_func Sequential sort method. Must have the same signature as the comparator version of `std::sort`.
+     * @param merge_func Sequential merge method. Must have the same signature as `std::inplace_merge`.
+     */
+    template <class ExecPolicy, class RandIt, class Compare>
+    poolstl::internal::enable_if_poolstl_policy<ExecPolicy, void>
+    pluggable_mergesort(ExecPolicy &&policy, RandIt first, RandIt last, Compare comp,
+                        void (sort_func)(RandIt, RandIt, Compare) = std::sort,
+                        void (merge_func)(RandIt, RandIt, RandIt, Compare) = std::inplace_merge) {
+        if (poolstl::internal::is_seq<ExecPolicy>(policy)) {
+            sort_func(first, last, comp);
+            return;
+        }
+
+        poolstl::internal::parallel_mergesort(std::forward<ExecPolicy>(policy),
+                                              first, last, comp, sort_func, merge_func);
+    }
+
+    /**
+     * NOTE: Iterators are expected to be random access.
+     *
+     * Parallel merge sort.
+     *
+     * Uses `std::less` comparator.
+     *
+     * @param sort_func Sequential sort method. Must have the same signature as the comparator version of `std::sort`.
+     * @param merge_func Sequential merge method. Must have the same signature as `std::inplace_merge`.
+     */
+    template <class ExecPolicy, class RandIt>
+    poolstl::internal::enable_if_poolstl_policy<ExecPolicy, void>
+    pluggable_mergesort(ExecPolicy &&policy, RandIt first, RandIt last,
+                   void (sort_func)(RandIt, RandIt,
                                     std::less<typename std::iterator_traits<RandIt>::value_type>) = std::sort,
                    void (merge_func)(RandIt, RandIt, RandIt,
                                     std::less<typename std::iterator_traits<RandIt>::value_type>) = std::inplace_merge){
         using T = typename std::iterator_traits<RandIt>::value_type;
-        pluggable_sort(std::forward<ExecPolicy>(policy), first, last, std::less<T>(), sort_func, merge_func);
+        pluggable_mergesort(std::forward<ExecPolicy>(policy), first, last, std::less<T>(), sort_func, merge_func);
+    }
+
+    /**
+     * NOTE: Iterators are expected to be random access.
+     *
+     * Parallel quicksort that allows specifying the sequential sort and partition methods.
+     *
+     * @param comp Comparator.
+     * @param sort_func Sequential sort method to use once range is sufficiently partitioned. Must have the same
+     *                  signature as the comparator version of `std::sort`.
+     * @param part_func Sequential partition method. Must have the same signature as `std::partition`.
+     * @param pivot_func Method that identifies the pivot element
+     */
+    template <class ExecPolicy, class RandIt, class Compare>
+    poolstl::internal::enable_if_poolstl_policy<ExecPolicy, void>
+    pluggable_quicksort(ExecPolicy &&policy, RandIt first, RandIt last, Compare comp,
+                        void (sort_func)(RandIt, RandIt, Compare) = std::sort,
+                        RandIt (part_func)(RandIt, RandIt, poolstl::internal::pivot_predicate<Compare,
+                            typename std::iterator_traits<RandIt>::value_type>) = std::partition,
+                        typename std::iterator_traits<RandIt>::value_type (pivot_func)(RandIt, RandIt) =
+                            poolstl::internal::quicksort_pivot) {
+        if (poolstl::internal::is_seq<ExecPolicy>(policy)) {
+            sort_func(first, last, comp);
+            return;
+        }
+
+        poolstl::internal::parallel_quicksort(std::forward<ExecPolicy>(policy),
+                                              first, last, comp, sort_func, part_func, pivot_func);
+    }
+
+    /**
+     * NOTE: Iterators are expected to be random access.
+     *
+     * Parallel quicksort that allows specifying the sequential sort and partition methods.
+     *
+     * Uses `std::less` comparator.
+     *
+     * @param sort_func Sequential sort method to use once range is sufficiently partitioned. Must have the same
+     *                  signature as the comparator version of `std::sort`.
+     * @param part_func Sequential partition method. Must have the same signature as `std::partition`.
+     * @param pivot_func Method that identifies the pivot element
+     */
+    template <class ExecPolicy, class RandIt>
+    poolstl::internal::enable_if_poolstl_policy<ExecPolicy, void>
+    pluggable_quicksort(ExecPolicy &&policy, RandIt first, RandIt last,
+                        void (sort_func)(RandIt, RandIt,
+                                    std::less<typename std::iterator_traits<RandIt>::value_type>) = std::sort,
+                        RandIt (part_func)(RandIt, RandIt, poolstl::internal::pivot_predicate<
+                            std::less<typename std::iterator_traits<RandIt>::value_type>,
+                            typename std::iterator_traits<RandIt>::value_type>) = std::partition,
+                        typename std::iterator_traits<RandIt>::value_type (pivot_func)(RandIt, RandIt) =
+                            poolstl::internal::quicksort_pivot) {
+        using T = typename std::iterator_traits<RandIt>::value_type;
+        pluggable_quicksort(std::forward<ExecPolicy>(policy), first, last, std::less<T>(),
+                            sort_func, part_func, pivot_func);
     }
 }
 

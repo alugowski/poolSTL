@@ -349,6 +349,11 @@ TEST_CASE("sort", "[alg][algorithm]") {
                 }
                 {
                     std::vector<int> work(source);
+                    poolstl::pluggable_sort(poolstl::par_if(false), work.begin(), work.end(), pdqsort);
+                    REQUIRE(dest1 == work);
+                }
+                {
+                    std::vector<int> work(source);
                     poolstl::pluggable_sort(poolstl::par.on(pool), work.begin(), work.end(), pdqsort);
                     REQUIRE(dest1 == work);
                 }
@@ -369,7 +374,7 @@ TEST_CASE("sort", "[alg][algorithm]") {
                 }
                 {
                     std::vector<int> work(source);
-                    poolstl::pluggable_quicksort(poolstl::par.on(pool), work.begin(), work.end(), pdqsort);
+                    poolstl::pluggable_quicksort(poolstl::par_if(false), work.begin(), work.end(), std::sort, std::partition);
                     REQUIRE(dest1 == work);
                 }
                 {

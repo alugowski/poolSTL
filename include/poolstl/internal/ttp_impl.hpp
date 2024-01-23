@@ -273,8 +273,13 @@ namespace poolstl {
             // Target partition size. Range will be recursively partitioned into partitions no bigger than this
             // size. Target approximately twice as many partitions as threads to reduce impact of uneven pivot
             // selection.
-            std::ptrdiff_t target_leaf_size = std::max(std::distance(first, last) / (task_pool.get_num_threads() * 2),
+            auto num_threads = task_pool.get_num_threads();
+            std::ptrdiff_t target_leaf_size = std::max(std::distance(first, last) / (num_threads * 2),
                                                        (std::ptrdiff_t)5);
+
+            if (num_threads == 1) {
+                target_leaf_size = std::distance(first, last);
+            }
 
             // task_thread_pool does not support creating task DAGs, so organize the code such that
             // all parallel tasks are independent. The parallel tasks can spawn additional parallel tasks, and they
@@ -303,6 +308,39 @@ namespace poolstl {
 
             // Wait on all the parallel tasks.
             get_futures(futures);
+        }
+
+        /**
+         * Partition range according to predicate. Unstable.
+         *
+         * This implementation only parallelizes with p=2; will spawn and wait for only one task.
+         */
+        template <class RandIt, class Predicate>
+        RandIt partition_p2(task_thread_pool::task_thread_pool &task_pool, RandIt first, RandIt last, Predicate pred) {
+            auto range_size = std::distance(first, last);
+            if (range_size < 4) {
+                return std::partition(first, last, pred);
+            }
+
+            // approach should be generalizable to arbitrary p
+
+            RandIt mid = std::next(first + range_size / 2);
+
+            // partition left and right halves in parallel
+            auto left_future = task_pool.submit(std::partition<RandIt, Predicate>, first, mid, pred);
+            RandIt right_mid = std::partition(mid, last, pred);
+            RandIt left_mid = left_future.get();
+
+            // merge the two partitioned halves
+            auto left_highs_size = std::distance(left_mid, mid);
+            auto right_lows_size = std::distance(mid, right_mid);
+            if (left_highs_size <= right_lows_size) {
+                std::swap_ranges(left_mid, mid, right_mid - left_highs_size);
+                return right_mid - left_highs_size;
+            } else {
+                std::swap_ranges(mid, right_mid, left_mid);
+                return left_mid + right_lows_size;
+            }
         }
     }
 }

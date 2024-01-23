@@ -94,6 +94,35 @@ BENCHMARK(for_each<std_par>)->Name("for_each(std::execution::par)")->UseRealTime
 ////////////////////////////////
 
 template <class ExecPolicy>
+void partition(benchmark::State& state) {
+    auto values = iota_vector<int>(arr_length);
+    std::vector<int> haystack(arr_length);
+
+    double pivot_frac = ((double)state.range(0)) / 100;
+    int pivot_val = (int)((double)values.size() * pivot_frac);
+    auto pred = [pivot_val] (const int& em) { return em < pivot_val; };
+
+    for ([[maybe_unused]] auto _ : state) {
+        if constexpr (is_policy<ExecPolicy>::value) {
+            auto res = std::partition(policy<ExecPolicy>::get(), values.begin(), values.end(), pred);
+            benchmark::DoNotOptimize(res);
+        } else {
+            auto res = std::partition(values.begin(), values.end(), pred);
+            benchmark::DoNotOptimize(res);
+        }
+        benchmark::ClobberMemory();
+    }
+}
+
+BENCHMARK(partition<seq>)->Name("partition()")->UseRealTime()->ArgName("pivot_percentile")->Arg(50);
+BENCHMARK(partition<poolstl_par>)->Name("partition(poolstl::par)")->UseRealTime()->ArgName("pivot_percentile")->Arg(50);
+#ifdef POOLSTL_BENCH_STD_PAR
+BENCHMARK(partition<std_par>)->Name("partition(std::execution::par)")->UseRealTime()->ArgName("pivot_percentile")->Arg(50);
+#endif
+
+////////////////////////////////
+
+template <class ExecPolicy>
 void sort(benchmark::State& state) {
     auto source = random_vector<int>(arr_length / 10);
 //    auto source = random_vector<int>(arr_length);

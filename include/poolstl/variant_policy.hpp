@@ -105,7 +105,9 @@ namespace std {
     POOLSTL_DEFINE_PAR_IF_FWD(std, for_each_n)
 #endif
 
+    POOLSTL_DEFINE_PAR_IF_FWD(std, partition)
     POOLSTL_DEFINE_PAR_IF_FWD(std, transform)
+    POOLSTL_DEFINE_PAR_IF_FWD(std, sort)
 
     // <numeric>
 
@@ -121,6 +123,7 @@ namespace poolstl {
     // <poolstl/algorithm>
 
     POOLSTL_DEFINE_PAR_IF_FWD_VOID(poolstl, for_each_chunk)
+    POOLSTL_DEFINE_PAR_IF_FWD_VOID(poolstl, pluggable_sort)
 }
 #endif
 

@@ -97,7 +97,9 @@ namespace std {
     POOLSTL_DEFINE_SEQ_FWD(std, for_each_n)
 #endif
 
+    POOLSTL_DEFINE_SEQ_FWD(std, partition)
     POOLSTL_DEFINE_SEQ_FWD(std, transform)
+    POOLSTL_DEFINE_SEQ_FWD(std, sort)
 
     // <numeric>
 

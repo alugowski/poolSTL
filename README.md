@@ -47,6 +47,7 @@ Algorithms are added on an as-needed basis. If you need one [open an issue](http
 * [`fill`](https://en.cppreference.com/w/cpp/algorithm/fill), [`fill_n`](https://en.cppreference.com/w/cpp/algorithm/fill_n)
 * [`find`](https://en.cppreference.com/w/cpp/algorithm/find), [`find_if`](https://en.cppreference.com/w/cpp/algorithm/find_if), [`find_if_not`](https://en.cppreference.com/w/cpp/algorithm/find_if_not)
 * [`for_each`](https://en.cppreference.com/w/cpp/algorithm/for_each), [`for_each_n`](https://en.cppreference.com/w/cpp/algorithm/for_each_n)
+* [`partition`](https://en.cppreference.com/w/cpp/algorithm/partition)
 * [`sort`](https://en.cppreference.com/w/cpp/algorithm/sort), [`stable_sort`](https://en.cppreference.com/w/cpp/algorithm/stable_sort)
 * [`transform`](https://en.cppreference.com/w/cpp/algorithm/transform)
 
@@ -197,9 +198,9 @@ for_each()/real_time                                               94.6 ms      
 for_each(poolstl::par)/real_time                                   18.7 ms        0.044 ms           36
 for_each(std::execution::par)/real_time                            15.3 ms         12.9 ms           46
 sort()/real_time                                                    603 ms          602 ms            1
-sort(poolstl::par)/real_time                                        137 ms         11.8 ms            5
+sort(poolstl::par)/real_time                                        112 ms         6.64 ms            6
 sort(std::execution::par)/real_time                                 113 ms          102 ms            6
-pluggable_sort(poolstl::par, ..., pdqsort)/real_time               91.8 ms         11.9 ms            7
+pluggable_sort(poolstl::par, ..., pdqsort)/real_time               71.7 ms         6.67 ms           10
 transform()/real_time                                              95.0 ms         94.9 ms            7
 transform(poolstl::par)/real_time                                  17.4 ms        0.037 ms           38
 transform(std::execution::par)/real_time                           15.3 ms         13.2 ms           45

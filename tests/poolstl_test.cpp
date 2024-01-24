@@ -321,16 +321,70 @@ TEST_CASE("inplace_merge", "[alg][algorithm]") {
     }
 }
 
+TEST_CASE("partition", "[alg][algorithm]") {
+    for (auto num_threads: test_thread_counts) {
+        ttp::task_thread_pool pool(num_threads);
+
+        for (auto num_iters: test_arr_sizes) {
+            for (int scramble_type = 0; scramble_type <= 2; ++scramble_type) {
+                auto source = iota_vector(num_iters);
+                switch (scramble_type) {
+                    case 0:
+                        std::reverse(source.begin(), source.end());
+                        break;
+                    case 1:
+                        scramble(source);
+                        break;
+                    default:
+                        break;
+                }
+
+                std::vector<int> pivots = {0, -1};
+                if (source.size() > 1) {
+                    pivots.push_back(*std::prev(source.end()));
+                    pivots.push_back(source[source.size() / 2]);
+                }
+
+                for (auto pivot : pivots) {
+                    auto pred = [pivot] (const int& em) { return em < pivot; };
+                    std::ptrdiff_t expected_left_size;
+                    {
+                        std::vector<int> work(source);
+                        auto ret = std::partition(work.begin(), work.end(), pred);
+                        expected_left_size = std::distance(work.begin(), ret);
+                    }
+                    {
+                        std::vector<int> work(source);
+                        auto mid = std::partition(poolstl::par_if(false), work.begin(), work.end(), pred);
+                        REQUIRE(expected_left_size == std::distance(work.begin(), mid));
+                        REQUIRE(std::is_partitioned(work.begin(), work.end(), pred));
+                    }
+                    {
+                        std::vector<int> work(source);
+                        auto mid = std::partition(poolstl::par.on(pool), work.begin(), work.end(), pred);
+                        REQUIRE(expected_left_size == std::distance(work.begin(), mid));
+                        REQUIRE(std::is_partitioned(work.begin(), work.end(), pred));
+                    }
+                }
+            }
+        }
+    }
+}
+
 TEST_CASE("sort", "[alg][algorithm]") {
     for (auto num_threads : test_thread_counts) {
         ttp::task_thread_pool pool(num_threads);
 
         for (auto num_iters : test_arr_sizes) {
-            for (int scramble_type = 0; scramble_type <= 2; ++scramble_type) {
+            for (int scramble_type = 0; scramble_type <= 3; ++scramble_type) {
                 auto source = iota_vector(num_iters);
                 switch (scramble_type) {
                     case 0: std::reverse(source.begin(), source.end()); break;
                     case 1: scramble(source); break;
+                    case 2:
+                        if (source.size() > 2) {
+                            std::swap(source[0], source[1]);
+                        }
                     default: break;
                 }
 

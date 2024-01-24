@@ -270,7 +270,7 @@ namespace poolstl {
             // size. Target approximately twice as many partitions as threads to reduce impact of uneven pivot
             // selection.
             auto num_threads = task_pool.get_num_threads();
-            std::ptrdiff_t target_leaf_size = std::max(std::distance(first, last) / (num_threads * 2),
+            std::ptrdiff_t target_leaf_size = std::max((std::ptrdiff_t)(std::distance(first, last) / (num_threads * 2)),
                                                        (std::ptrdiff_t)5);
 
             if (num_threads == 1) {

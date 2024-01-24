@@ -43,8 +43,7 @@ namespace poolstl {
                 auto iter_chunk_size = get_iter_chunk_size(first, last, chunk_size);
                 RandIt loop_end = advanced(first, iter_chunk_size);
 
-                threads.emplace_back(std::thread(std::forward<Chunk>(chunk), first, loop_end,
-                                                 std::forward<A>(chunk_args)...));
+                threads.emplace_back(std::thread(chunk, first, loop_end, chunk_args...));
 
                 first = loop_end;
             }

@@ -39,6 +39,22 @@ jobs:
             test-amalgamation: true
 
           - os: ubuntu-latest
+            description: "Emscripten"
+            emscripten-version: "3.1.52"
+            # needs:
+            # - use emscripten's cmake toolchain file so cmake uses em++ and such
+            # - must compile with -pthread for C++11 threads to work
+            #
+            # See https://emscripten.org/docs/porting/pthreads.html
+            #
+            # poolSTL test-suite specific options:
+            # - using -sNO_DISABLE_EXCEPTION_CATCHING because some tests throw
+            # - using high -sTOTAL_MEMORY because our benchmarks use large arrays
+            # - disable codecov because emscripten does not support it.
+            # - Consider -DCMAKE_EXE_LINKER_FLAGS="-sPTHREAD_POOL_SIZE=navigator.hardwareConcurrency"
+            cmake-flags: '-DCMAKE_TOOLCHAIN_FILE=$(em-config EMSCRIPTEN_ROOT)/cmake/Modules/Platform/Emscripten.cmake -DCMAKE_CXX_FLAGS="-pthread -sNO_DISABLE_EXCEPTION_CATCHING" -DCMAKE_EXE_LINKER_FLAGS="-sTOTAL_MEMORY=2048MB" -DPOOLSTL_TEST_COVERAGE=OFF'
+
+          - os: ubuntu-latest
             # default GCC, which has gcov
 
           - os: macos-latest
@@ -82,6 +98,21 @@ jobs:
           version: ${{ matrix.llvm-version }}
           env: true
 
+      - name: Setup Emscripten
+        uses: mymindstorm/setup-emsdk@v14
+        if: ${{ matrix.emscripten-version != '' }}
+        with:
+          version: ${{ matrix.emscripten-version }}
+
+        # Default node.js (v18) does not support threads well.
+        # It might work with --experimental-wasm-threads --experimental-wasm-bulk-memory
+        # but newer node just works out of the box.
+      - name: Setup node.js for running Emscripten builds
+        uses: actions/setup-node@v4
+        if: ${{ matrix.emscripten-version != '' }}
+        with:
+          node-version: 21
+
       - name: Setup cmake
         uses: jwlawson/actions-setup-cmake@v1
         if: ${{ matrix.cmake-version != '' }}
@@ -95,7 +126,7 @@ jobs:
           cd build/tests
           ctest -C Debug --output-on-failure --verbose
           echo "Supplement Test:"
-          ./supplement_test || ./Debug/supplement_test.exe
+          ./supplement_test || ./Debug/supplement_test.exe || node supplement_test
         shell: bash
 
       - name: Benchmark
@@ -105,7 +136,7 @@ jobs:
           cmake -S . -B bench_build/ -DCMAKE_BUILD_TYPE=Release -DPOOLSTL_BENCH=ON ${{ matrix.cmake-flags }}
           cmake --build bench_build/ --config Release
           cd bench_build/benchmark/
-          ./poolstl_bench || ./Release/poolstl_bench.exe
+          ./poolstl_bench || ./Release/poolstl_bench.exe || node poolstl_bench
         shell: bash
 
       - name: Test Amalgamation

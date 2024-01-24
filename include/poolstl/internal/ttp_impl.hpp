@@ -56,7 +56,7 @@ namespace poolstl {
                 auto iter_chunk_size = get_iter_chunk_size(first, last, chunk_size);
                 RandIt loop_end = advanced(first, iter_chunk_size);
 
-                futures.emplace_back(task_pool.submit(std::forward<Chunk>(chunk), first, loop_end));
+                futures.emplace_back(task_pool.submit(chunk, first, loop_end));
 
                 first = loop_end;
             }
@@ -79,8 +79,7 @@ namespace poolstl {
                 auto iter_chunk_size = get_iter_chunk_size(first, last, chunk_size);
                 RandIt loop_end = advanced(first, iter_chunk_size);
 
-                futures.emplace_back(task_pool.submit(std::forward<Chunk>(chunk), first, loop_end,
-                                                      std::forward<A>(chunk_args)...));
+                futures.emplace_back(task_pool.submit(chunk, first, loop_end, chunk_args...));
 
                 first = loop_end;
             }
@@ -96,8 +95,7 @@ namespace poolstl {
         parallel_chunk_for_1_wait(ExecPolicy &&policy, RandIt first, RandIt last,
                                   Chunk chunk, ChunkRet* rettype, int extra_split_factor, A&&... chunk_args) {
             auto futures = parallel_chunk_for_1(std::forward<ExecPolicy>(policy), first, last,
-                                                std::forward<Chunk>(chunk), rettype, extra_split_factor,
-                                                std::forward<A>(chunk_args)...);
+                                                chunk, rettype, extra_split_factor, chunk_args...);
             get_futures(futures);
         }
 
@@ -116,8 +114,7 @@ namespace poolstl {
                 auto iter_chunk_size = get_iter_chunk_size(first1, last1, chunk_size);
                 RandIt1 loop_end = advanced(first1, iter_chunk_size);
 
-                futures.emplace_back(task_pool.submit(std::forward<Chunk>(chunk), first1, loop_end, first2,
-                                                      std::forward<A>(chunk_args)...));
+                futures.emplace_back(task_pool.submit(chunk, first1, loop_end, first2, chunk_args...));
 
                 first1 = loop_end;
                 std::advance(first2, iter_chunk_size);
@@ -142,8 +139,7 @@ namespace poolstl {
                 auto iter_chunk_size = get_iter_chunk_size(first1, last1, chunk_size);
                 RandIt1 loop_end = advanced(first1, iter_chunk_size);
 
-                futures.emplace_back(task_pool.submit(std::forward<Chunk>(chunk), first1, loop_end, first2, first3,
-                                                      std::forward<A>(chunk_args)...));
+                futures.emplace_back(task_pool.submit(chunk, first1, loop_end, first2, first3, chunk_args...));
 
                 first1 = loop_end;
                 std::advance(first2, iter_chunk_size);

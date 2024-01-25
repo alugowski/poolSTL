@@ -169,6 +169,9 @@ void pluggable_sort(benchmark::State& state) {
         } else if constexpr (which_impl == 4) {
             // pluggable_sort delegates to this, so essentially same as which_impl==1
             poolstl::pluggable_quicksort(policy<ExecPolicy>::get(), values.begin(), values.end(), pdqsort);
+        } else if constexpr (which_impl == 5) {
+            // does not use poolSTL at all. Just for comparison against parallelized version.
+            pdqsort(values.begin(), values.end());
         }
 
         benchmark::DoNotOptimize(values);
@@ -176,6 +179,7 @@ void pluggable_sort(benchmark::State& state) {
     }
 }
 
+//BENCHMARK(pluggable_sort<poolstl_par, 5>)->Name("pdqsort()")->UseRealTime(); // does not use poolSTL at all. Just for comparison against parallelized version.
 BENCHMARK(pluggable_sort<poolstl_par, 1>)->Name("pluggable_sort(poolstl::par, ..., pdqsort)")->UseRealTime(); // uses pdqsort
 //BENCHMARK(pluggable_sort<poolstl_par, 2>)->Name("pluggable_mergesort(poolstl::par, ..., pdqsort)")->UseRealTime(); // uses pdqsort and std::inplace_merge (O(n) extra memory)
 //BENCHMARK(pluggable_sort<poolstl_par, 3>)->Name("pluggable_mergesort(poolstl::par, ..., pdqsort, pipm_merge)")->UseRealTime(); // uses pdqsort and adapted_pipm_inplace_merge (slower, but O(1) extra memory)

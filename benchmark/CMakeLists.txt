@@ -54,3 +54,11 @@ else()
     # MinGW also requires nothing to compile std::execution::par, but performance appears to be the same as sequential.
     target_compile_definitions(poolstl_bench PUBLIC POOLSTL_BENCH_STD_PAR)
 endif()
+
+if (EMSCRIPTEN)
+    # Benchmark uses large arrays that require more than Emscripten's default 16MB.
+    target_link_options(poolstl_bench PUBLIC "-sTOTAL_MEMORY=2048MB")
+
+    # Recommended by docs, but does not appear to have an effect. Maybe new node.js does not need it?
+    # target_link_options(poolstl_bench PUBLIC "-sPTHREAD_POOL_SIZE=navigator.hardwareConcurrency")
+endif()

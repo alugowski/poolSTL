@@ -39,20 +39,9 @@ jobs:
             test-amalgamation: true
 
           - os: ubuntu-latest
-            description: "Emscripten"
+            description: "Emscripten 3.1"
             emscripten-version: "3.1.52"
-            # needs:
-            # - use emscripten's cmake toolchain file so cmake uses em++ and such
-            # - must compile with -pthread for C++11 threads to work
-            #
-            # See https://emscripten.org/docs/porting/pthreads.html
-            #
-            # poolSTL test-suite specific options:
-            # - using -sNO_DISABLE_EXCEPTION_CATCHING because some tests throw
-            # - using high -sTOTAL_MEMORY because our benchmarks use large arrays
-            # - disable codecov because emscripten does not support it.
-            # - Consider -DCMAKE_EXE_LINKER_FLAGS="-sPTHREAD_POOL_SIZE=navigator.hardwareConcurrency"
-            cmake-flags: '-DCMAKE_TOOLCHAIN_FILE=$(em-config EMSCRIPTEN_ROOT)/cmake/Modules/Platform/Emscripten.cmake -DCMAKE_CXX_FLAGS="-pthread -sNO_DISABLE_EXCEPTION_CATCHING" -DCMAKE_EXE_LINKER_FLAGS="-sTOTAL_MEMORY=2048MB" -DPOOLSTL_TEST_COVERAGE=OFF'
+            cmake-flags: '-DCMAKE_TOOLCHAIN_FILE=$(em-config EMSCRIPTEN_ROOT)/cmake/Modules/Platform/Emscripten.cmake'
 
           - os: ubuntu-latest
             # default GCC, which has gcov

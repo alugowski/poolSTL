@@ -43,6 +43,14 @@ target_compile_features(poolSTL INTERFACE cxx_std_11)
 find_package(Threads)
 target_link_libraries(poolSTL INTERFACE Threads::Threads)
 
+if (EMSCRIPTEN)
+    # Emscripten needs -pthread compiler and linker switch for C++11 threads.
+    # Anything that will link against poolSTL also needs to be compiled with -pthread.
+    add_compile_options("-pthread")
+    target_compile_options(poolSTL INTERFACE "-pthread")
+    target_link_options(poolSTL INTERFACE "-pthread")
+endif()
+
 ###############################################
 
 # Tests

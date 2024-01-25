@@ -33,6 +33,7 @@ set(HEADER_FILES
         include/poolstl/iota_iter.hpp
         include/poolstl/internal/utils.hpp
         include/poolstl/internal/ttp_impl.hpp
+        include/poolstl/internal/thread_impl.hpp
         include/poolstl/internal/task_thread_pool.hpp)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${HEADER_FILES}")

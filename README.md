@@ -145,12 +145,15 @@ std::vector<int> vec = {5, 2, 1, 3, 0, 4};
 std::sort(poolstl::par, vec.begin(), vec.end());
 ```
 
-## Installation
+# Installation
 
 ### Single File
 
-Each [release](https://github.com/alugowski/poolSTL/releases/latest) publishes a single-file amalgamated `poolstl.hpp`. Simply copy this into your project.  
-**Note:** Some compilers (non-Apple Clang, GCC 8 and older) require `-lpthread` to use C++11 threads.
+Each [release](https://github.com/alugowski/poolSTL/releases/latest) publishes a single-file amalgamated `poolstl.hpp`. Simply copy this into your project.
+
+**Build requirements:**
+ - Clang and GCC 8 or older: require `-lpthread` to use C++11 threads.
+ - Emscripten: compile and link with `-pthread` to use C++11 threads. [See docs](https://emscripten.org/docs/porting/pthreads.html).
 
 ### CMake
 

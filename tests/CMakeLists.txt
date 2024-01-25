@@ -26,7 +26,9 @@ endif()
 # Code Coverage
 option(POOLSTL_TEST_COVERAGE "Code-coverage" OFF)
 if(POOLSTL_TEST_COVERAGE)
-    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    if (EMSCRIPTEN)
+        # Clang's code coverage tools not supported on Emscripten (will produce link error).
+    elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
         add_compile_options("--coverage")
         add_link_options("-lgcov" "--coverage")
     elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
@@ -51,6 +53,14 @@ FetchContent_MakeAvailable(Catch2)
 list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
 include(CTest)
 include(Catch)
+
+
+if (EMSCRIPTEN)
+    # Includes a test that throws exceptions, which are opt-in on Emscripten.
+    # See https://emscripten.org/docs/porting/exceptions.html
+    add_compile_options("-fexceptions")
+    add_link_options("-fexceptions")
+endif()
 
 # tests compiled with C++14 (Catch2 requires C++14)
 add_executable(poolstl_test poolstl_test.cpp)

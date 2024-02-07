@@ -14,6 +14,7 @@ parsers:
       loop: no
   cobertura:
     partials_as_hits: true
+    handle_missing_conditons: true
 ignore:
   - "tests"
   - "benchmark"

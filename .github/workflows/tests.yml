@@ -126,7 +126,7 @@ jobs:
       
       - name: Create code coverage report
         if: matrix.gcov_executable != ''
-        working-directory: ./build
+        working-directory: ./build/tests
         run: |
           pip install gcovr
           gcovr --delete --root ../ --print-summary --xml-pretty --xml coverage.xml . --gcov-executable '${{ matrix.gcov_executable }}'

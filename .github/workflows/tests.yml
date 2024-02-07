@@ -122,12 +122,12 @@ jobs:
           ./supplement_test || ./Debug/supplement_test.exe || node supplement_test
         shell: bash
       
-      - name: Create code coverage report
+      - name: Create code coverage report (gcov)
         if: matrix.gcov_executable != ''
         working-directory: ./build/tests
         run: |
           pip install gcovr
-          gcovr --delete --root ../ --print-summary --xml-pretty --xml coverage.xml . --gcov-executable '${{ matrix.gcov_executable }}'
+          gcovr --delete --root ../../ --print-summary --xml-pretty --xml coverage.xml . --gcov-executable '${{ matrix.gcov_executable }}'
 
       - name: Benchmark
         # Earliest GCC with all benchmarked methods is 9

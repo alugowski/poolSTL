@@ -578,6 +578,7 @@ TEST_CASE("exclusive_scan", "[alg][algorithm]") {
 }
 #endif
 
+#if POOLSTL_HAVE_CXX17_LIB
 TEST_CASE("reduce", "[alg][numeric]") {
     for (auto num_threads : test_thread_counts) {
         ttp::task_thread_pool pool(num_threads);
@@ -585,16 +586,13 @@ TEST_CASE("reduce", "[alg][numeric]") {
         for (auto num_iters : test_arr_sizes) {
             auto v = iota_vector(num_iters);
 
-#if POOLSTL_HAVE_CXX17_LIB
             auto seq = std::reduce(poolstl::par_if(false), v.cbegin(), v.cend());
-#else
-            auto seq = std::reduce(poolstl::seq, v.cbegin(), v.cend());
-#endif
             auto par = std::reduce(poolstl::par.on(pool),  v.cbegin(), v.cend());
             REQUIRE(seq == par);
         }
     }
 }
+#endif
 
 #if POOLSTL_HAVE_CXX17_LIB
 TEST_CASE("transform_reduce_1", "[alg][numeric]") {

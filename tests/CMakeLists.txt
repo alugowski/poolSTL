@@ -2,6 +2,20 @@
 cmake_minimum_required(VERSION 3.11...3.26)
 enable_testing()
 
+# Code Coverage
+option(POOLSTL_TEST_COVERAGE "Code-coverage" OFF)
+if(POOLSTL_TEST_COVERAGE)
+    if (EMSCRIPTEN)
+        # Clang's code coverage tools not supported on Emscripten (will produce link error).
+    elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+        add_compile_options("-O0" "--coverage")
+        add_link_options("-lgcov" "--coverage")
+    elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+        add_compile_options("-O0" "--coverage")
+        add_link_options("--coverage")
+    endif()
+endif()
+
 if (WIN32)
     # Need bigobj because some tests use lots of templates
     if (MSVC)
@@ -21,20 +35,6 @@ if (MINGW AND WIN32)
     # The MinGW on GitHub Actions requires these.
     # If omitted some executables crash with 'Exit code 0xc0000139' which appears to mean a missing DLL.
     add_link_options("-static-libstdc++" "-static-libgcc")
-endif()
-
-# Code Coverage
-option(POOLSTL_TEST_COVERAGE "Code-coverage" OFF)
-if(POOLSTL_TEST_COVERAGE)
-    if (EMSCRIPTEN)
-        # Clang's code coverage tools not supported on Emscripten (will produce link error).
-    elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-        add_compile_options("-O0" "--coverage")
-        add_link_options("-lgcov" "--coverage")
-    elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-        add_compile_options("-O0" "--coverage")
-        add_link_options("--coverage")
-    endif()
 endif()
 
 # install Catch2

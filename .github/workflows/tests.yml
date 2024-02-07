@@ -30,7 +30,6 @@ jobs:
             gcc-version: "7"
             cmake-version: "3.18"
             test-amalgamation: true
-            gcov_executable: "gcov"
 
           - os: ubuntu-20.04
             description: "GCC 9"
@@ -41,7 +40,6 @@ jobs:
             description: "GCC 13"
             gcc-version: "13"
             test-amalgamation: true
-            gcov_executable: "gcov"
 
           - os: ubuntu-latest
             description: "Emscripten 3.1"

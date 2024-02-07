@@ -588,7 +588,7 @@ TEST_CASE("reduce", "[alg][numeric]") {
 #if POOLSTL_HAVE_CXX17_LIB
             auto seq = std::reduce(poolstl::par_if(false), v.cbegin(), v.cend());
 #else
-            auto seq = poolstl::internal::cpp17::reduce(v.cbegin(), v.cend());
+            auto seq = std::reduce(poolstl::seq, v.cbegin(), v.cend());
 #endif
             auto par = std::reduce(poolstl::par.on(pool),  v.cbegin(), v.cend());
             REQUIRE(seq == par);

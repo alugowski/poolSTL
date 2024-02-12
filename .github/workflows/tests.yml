@@ -16,12 +16,14 @@ jobs:
             # oldest LLVM that the install-llvm-action action is able to install
             description: "LLVM 5"
             llvm-version: "5"
+            #gcov_executable: "llvm-cov gcov"
 
           - os: ubuntu-22.04
             # select libc++ as libstdc++ appears to be the default
             description: "LLVM 16 libc++"
             llvm-version: "16"
             cmake-flags: '-DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-lc++abi"'
+            #gcov_executable: "llvm-cov gcov"
 
           - os: ubuntu-20.04
             description: "GCC 7"
@@ -32,6 +34,7 @@ jobs:
           - os: ubuntu-20.04
             description: "GCC 9"
             gcc-version: "9"
+            #gcov_executable: "gcov"
 
           - os: ubuntu-latest
             description: "GCC 13"
@@ -45,6 +48,7 @@ jobs:
 
           - os: ubuntu-latest
             # default GCC, which has gcov
+            gcov_executable: "gcov"
 
           - os: macos-latest
             # uses Apple Clang
@@ -117,6 +121,13 @@ jobs:
           echo "Supplement Test:"
           ./supplement_test || ./Debug/supplement_test.exe || node supplement_test
         shell: bash
+      
+      - name: Create code coverage report (gcov)
+        if: matrix.gcov_executable != ''
+        working-directory: ./build/tests
+        run: |
+          pip install gcovr
+          gcovr --delete --root ../../ --print-summary --xml coverage.xml . --gcov-executable '${{ matrix.gcov_executable }}' --merge-mode-functions=separate --gcov-ignore-parse-errors=negative_hits.warn_once_per_file
 
       - name: Benchmark
         # Earliest GCC with all benchmarked methods is 9
@@ -145,8 +156,9 @@ jobs:
         shell: bash
 
       - name: Upload Coverage to Codecov
-        if: contains(matrix.os, 'ubuntu') || contains(matrix.os, 'macos')
-        uses: codecov/codecov-action@v3
+        if: matrix.gcov_executable != ''
+        uses: codecov/codecov-action@v4
         with:
-          gcov: true
-          gcov_include: include/*
+          fail_ci_if_error: true
+          verbose: true
+          token: ${{ secrets.CODECOV_TOKEN }}

@@ -34,7 +34,7 @@ Use poolSTL exclusively, or only on platforms lacking native support,
 or only if [TBB](https://www.intel.com/content/www/us/en/developer/tools/oneapi/onetbb.html) is not present.
 
 Supports C++11 and higher. Algorithms introduced in C++17 require C++17 or higher.  
-Tested in CI on GCC 7+, Clang/LLVM 5+, Apple Clang, MSVC, MinGW, and Emscripten.
+Tested in CI on GCC 7+, Clang/LLVM 7+, Apple Clang, MSVC, MinGW, and Emscripten.
 
 ## Implemented Algorithms
 Algorithms are added on an as-needed basis. If you need one [open an issue](https://github.com/alugowski/poolSTL/issues) or contribute a PR.  

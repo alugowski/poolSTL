@@ -14,8 +14,8 @@ jobs:
         include:
           - os: ubuntu-20.04
             # oldest LLVM that the install-llvm-action action is able to install
-            description: "LLVM 5"
-            llvm-version: "5"
+            description: "LLVM 7"
+            llvm-version: "7"
 
           - os: ubuntu-22.04
             # select libc++ as libstdc++ appears to be the default

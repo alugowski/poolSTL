@@ -14,9 +14,8 @@ jobs:
         include:
           - os: ubuntu-20.04
             # oldest LLVM that the install-llvm-action action is able to install
-            description: "LLVM 5"
-            llvm-version: "5"
-            #gcov_executable: "llvm-cov gcov"
+            description: "LLVM 7"
+            llvm-version: "7"
 
           - os: ubuntu-22.04
             # select libc++ as libstdc++ appears to be the default
@@ -85,7 +84,7 @@ jobs:
           Add-Content $env:GITHUB_PATH "C:\ProgramData\mingw64\mingw64\bin"
 
       - name: Setup LLVM and Clang
-        uses: KyleMayes/install-llvm-action@v1
+        uses: KyleMayes/install-llvm-action@v2
         if: ${{ matrix.llvm-version != '' }}
         with:
           version: ${{ matrix.llvm-version }}

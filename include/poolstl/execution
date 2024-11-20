@@ -57,7 +57,7 @@ namespace poolstl {
          */
         struct parallel_policy : public poolstl_policy {
             parallel_policy() = default;
-            explicit parallel_policy(ttp::task_thread_pool* on_pool, bool par_ok): on_pool(on_pool), par_ok(par_ok) {}
+            explicit parallel_policy(ttp::task_thread_pool* aOn_pool, bool aPar_ok): on_pool(aOn_pool), par_ok(aPar_ok) {}
 
             parallel_policy on(ttp::task_thread_pool& pool) const {
                 return parallel_policy{&pool, par_ok};
@@ -101,8 +101,8 @@ namespace poolstl {
          *  - Barely any algorithms are supported.
          */
         struct pure_threads_policy : public poolstl_policy {
-            explicit pure_threads_policy(unsigned int num_threads, bool par_ok): num_threads(num_threads),
-                                                                                 par_ok(par_ok) {}
+            explicit pure_threads_policy(unsigned int aNum_threads, bool aPar_ok): num_threads(aNum_threads),
+                                                                                   par_ok(aPar_ok) {}
 
             POOLSTL_NO_DISCARD unsigned int get_num_threads() const {
                 if (num_threads == 0) {

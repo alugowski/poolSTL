@@ -74,7 +74,7 @@ namespace poolstl {
             using difference_type = typename std::iterator_traits<Iterator>::difference_type;
             using pointer = value_type*;
             using reference = value_type&;
-            explicit getting_iter(Iterator iter) : iter(iter) {}
+            explicit getting_iter(Iterator aIter) : iter(aIter) {}
 
             getting_iter operator++() { ++iter; return *this; }
             getting_iter operator++(int) { getting_iter ret(*this); ++iter; return ret; }
@@ -114,7 +114,7 @@ namespace poolstl {
          */
         template <class Compare, class T>
         struct pivot_predicate {
-            pivot_predicate(Compare comp, const T& pivot) : comp(comp), pivot(pivot) {}
+            pivot_predicate(Compare aComp, const T& aPivot) : comp(aComp), pivot(aPivot) {}
 
             bool operator()(const T& em) {
                 return comp(em, pivot);

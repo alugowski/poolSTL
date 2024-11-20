@@ -29,8 +29,8 @@ namespace poolstl {
             auto& task_pool = *policy.pool();
 
             for (const auto& args : args_list) {
-                futures.emplace_back(task_pool.submit([](Op op, const auto& args_fwd) {
-                        std::apply(op, args_fwd);
+                futures.emplace_back(task_pool.submit([](Op aOp, const auto& aArgs_fwd) {
+                        std::apply(aOp, aArgs_fwd);
                     }, op, args));
             }
 

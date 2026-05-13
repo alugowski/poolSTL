@@ -66,6 +66,11 @@ namespace std {
         using parallel_unsequenced_policy = ::poolstl::execution::parallel_policy;
         constexpr parallel_unsequenced_policy par_unseq{};
     }
+
+    using ::poolstl::is_execution_policy;
+    
+    template <class T>
+    constexpr bool is_execution_policy_v = ::poolstl::is_execution_policy<T>::value;
 }
 
 #endif

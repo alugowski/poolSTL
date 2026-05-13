@@ -196,6 +196,25 @@ namespace poolstl {
         using is_pure_threads_policy = std::is_same<poolstl::execution::pure_threads_policy,
             typename std::remove_cv<typename std::remove_reference<ExecPolicy>::type>::type>;
     }
+
+    /**
+     * Test whether a type is a poolSTL execution policy.
+     * Mirrors C++17's std::is_execution_policy for poolSTL policies.
+     */
+    template <class T>
+    struct is_execution_policy : std::false_type {};
+
+    template <>
+    struct is_execution_policy<execution::sequenced_policy> : std::true_type {};
+
+    template <>
+    struct is_execution_policy<execution::parallel_policy> : std::true_type {};
+
+    template <>
+    struct is_execution_policy<execution::pure_threads_policy> : std::true_type {};
+
+    template <class T>
+    constexpr bool is_execution_policy_v = is_execution_policy<T>::value;
 }
 
 #endif
